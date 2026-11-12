@@ -1,7 +1,7 @@
 import { SkillsList } from "../SkillsList/SkillsList.component";
 import { BIO_MAX, COUNTRIES } from "./UserInfoForm.constants";
 import styles from "./UserInfoForm.module.css";
-import { useUserInfoForm } from "./UserInfoForm.service";
+import { useUserInfoForm } from "./useUserInfoForm";
 
 export const UserInfoForm = () => {
   const {
