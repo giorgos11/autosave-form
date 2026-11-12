@@ -1,19 +1,19 @@
-import type { Skill } from "./SkillsList.constants";
+import type { Skill } from "./SkillsList.types";
 
-export interface CreateSkillParams {
+export type CreateSkillParams = {
   name?: string;
-}
+};
 
 export const createSkill = ({ name = "" }: CreateSkillParams = {}): Skill => ({
   id: crypto.randomUUID(),
   name,
 });
 
-export interface MoveSkillParams {
+export type MoveSkillParams = {
   skills: Skill[];
   fromIndex: number;
   toIndex: number;
-}
+};
 
 export const moveSkill = ({
   skills,
@@ -36,20 +36,20 @@ export const moveSkill = ({
   return next;
 };
 
-export interface RemoveSkillParams {
+export type RemoveSkillParams = {
   skills: Skill[];
   id: string;
-}
+};
 
 export const removeSkill = ({ skills, id }: RemoveSkillParams): Skill[] => {
   return skills.filter((skill) => skill.id !== id);
 };
 
-export interface UpdateSkillNameParams {
+export type UpdateSkillNameParams = {
   skills: Skill[];
   id: string;
   name: string;
-}
+};
 
 export const updateSkillName = ({
   skills,

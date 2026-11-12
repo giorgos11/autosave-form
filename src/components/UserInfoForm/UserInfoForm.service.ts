@@ -3,13 +3,15 @@ import {
   BIO_MAX,
   EMAIL_PATTERN,
   PHONE_PATTERN,
-  type UserInfoFormErrors,
-  type UserInfoFormValues,
 } from "./UserInfoForm.constants";
+import type {
+  UserInfoFormErrors,
+  UserInfoFormValues,
+} from "./UserInfoForm.types";
 
-export interface ValidateParams {
+export type ValidateParams = {
   values: UserInfoFormValues;
-}
+};
 
 export const validate = ({ values }: ValidateParams): UserInfoFormErrors => {
   const errors: UserInfoFormErrors = {};

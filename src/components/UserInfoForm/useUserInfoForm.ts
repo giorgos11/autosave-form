@@ -6,13 +6,13 @@ import {
   removeSkill,
   updateSkillName,
 } from "../SkillsList/SkillsList.service";
-import {
-  INITIAL_VALUES,
-  type UserInfoFormErrors,
-  type UserInfoFormField,
-  type UserInfoFormValues,
-} from "./UserInfoForm.constants";
+import { INITIAL_VALUES } from "./UserInfoForm.constants";
 import { validate } from "./UserInfoForm.service";
+import type {
+  UserInfoFormErrors,
+  UserInfoFormField,
+  UserInfoFormValues,
+} from "./UserInfoForm.types";
 
 export const useUserInfoForm = () => {
   const [values, setValues] = useState<UserInfoFormValues>(INITIAL_VALUES);

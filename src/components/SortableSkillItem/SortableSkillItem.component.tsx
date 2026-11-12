@@ -1,8 +1,19 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { ChangeEvent } from "react";
 import { SKILL_NAME_MAX } from "../SkillsList/SkillsList.constants";
-import type { SortableSkillItemProps } from "./SortableSkillItem.constants";
+import type { Skill } from "../SkillsList/SkillsList.types";
 import styles from "./SortableSkillItem.module.css";
+
+type SortableSkillItemProps = {
+  skill: Skill;
+  index: number;
+  total: number;
+  onNameChange: (event: ChangeEvent<HTMLInputElement>, id: string) => void;
+  onMoveUp: (index: number) => void;
+  onMoveDown: (index: number) => void;
+  onRemove: (id: string) => void;
+};
 
 export const SortableSkillItem = ({
   skill,

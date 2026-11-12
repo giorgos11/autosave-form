@@ -5,15 +5,27 @@ import {
   closestCenter,
   useSensor,
   useSensors,
+  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import type { ChangeEvent } from "react";
 import { SortableSkillItem } from "../SortableSkillItem/SortableSkillItem.component";
-import type { SkillsListProps } from "./SkillsList.constants";
+import type { Skill } from "./SkillsList.types";
 import styles from "./SkillsList.module.css";
+
+type SkillsListProps = {
+  skills: Skill[];
+  onAddSkill: () => void;
+  onRemoveSkill: (id: string) => void;
+  onMoveSkillUp: (index: number) => void;
+  onMoveSkillDown: (index: number) => void;
+  onDragEnd: (event: DragEndEvent) => void;
+  onSkillNameChange: (event: ChangeEvent<HTMLInputElement>, id: string) => void;
+};
 
 export const SkillsList = ({
   skills,

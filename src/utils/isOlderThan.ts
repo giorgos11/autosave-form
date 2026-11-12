@@ -1,7 +1,7 @@
-export interface IsOlderThanParams {
+export type IsOlderThanParams = {
   dateOfBirth: string;
   age: number;
-}
+};
 
 export const isOlderThan = ({ dateOfBirth, age }: IsOlderThanParams): boolean => {
   const dob = new Date(dateOfBirth);
