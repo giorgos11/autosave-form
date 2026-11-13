@@ -1,24 +1,26 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { ChangeEvent } from "react";
 import { SKILL_NAME_MAX } from "@/features/user-profile/domain/constants/validation";
 import type { Skill } from "@/features/user-profile/domain/entities/skill";
 import styles from "./SortableSkillItem.module.css";
 
 type SortableSkillItemProps = {
   skill: Skill;
-  index: number;
-  total: number;
-  onNameChange: (event: ChangeEvent<HTMLInputElement>, id: string) => void;
-  onMoveUp: (index: number) => void;
-  onMoveDown: (index: number) => void;
-  onRemove: (id: string) => void;
+  /** 1-based position in the list, used for accessible labels. */
+  position: number;
+  isFirst: boolean;
+  isLast: boolean;
+  onNameChange: (name: string) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
 };
 
 export const SortableSkillItem = ({
   skill,
-  index,
-  total,
+  position,
+  isFirst,
+  isLast,
   onNameChange,
   onMoveUp,
   onMoveDown,
@@ -38,50 +40,54 @@ export const SortableSkillItem = ({
     transition,
   };
 
+  const className = [styles.item, isDragging && styles.itemDragging]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <li
-      ref={setNodeRef}
-      style={style}
-      className={`${styles.item} ${isDragging ? styles.itemDragging : ""}`}
-    >
+    <li ref={setNodeRef} style={style} className={className}>
       <button
         type="button"
         className={styles.dragHandle}
-        aria-label={`Drag skill ${index + 1}`}
+        aria-label={`Drag skill ${position}`}
         {...attributes}
         {...listeners}
       >
-        ⋮⋮
+        <span aria-hidden="true">⋮⋮</span>
       </button>
       <input
         type="text"
+        className={styles.nameInput}
         value={skill.name}
         maxLength={SKILL_NAME_MAX}
         placeholder="Skill name"
-        aria-label={`Skill ${index + 1}`}
-        onChange={(event) => onNameChange(event, skill.id)}
+        aria-label={`Skill ${position}`}
+        onChange={(event) => onNameChange(event.target.value)}
       />
       <div className={styles.actions}>
         <button
           type="button"
-          aria-label={`Move skill ${index + 1} up`}
-          disabled={index === 0}
-          onClick={() => onMoveUp(index)}
+          className={styles.actionButton}
+          aria-label={`Move skill ${position} up`}
+          disabled={isFirst}
+          onClick={onMoveUp}
         >
-          ↑
+          <span aria-hidden="true">↑</span>
         </button>
         <button
           type="button"
-          aria-label={`Move skill ${index + 1} down`}
-          disabled={index === total - 1}
-          onClick={() => onMoveDown(index)}
+          className={styles.actionButton}
+          aria-label={`Move skill ${position} down`}
+          disabled={isLast}
+          onClick={onMoveDown}
         >
-          ↓
+          <span aria-hidden="true">↓</span>
         </button>
         <button
           type="button"
-          aria-label={`Remove skill ${index + 1}`}
-          onClick={() => onRemove(skill.id)}
+          className={styles.actionButton}
+          aria-label={`Remove skill ${position}`}
+          onClick={onRemove}
         >
           Remove
         </button>
