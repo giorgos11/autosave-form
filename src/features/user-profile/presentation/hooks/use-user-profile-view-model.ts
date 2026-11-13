@@ -17,13 +17,11 @@ export const useUserProfileViewModel = () => {
     field: K,
     value: UserProfile[K],
   ) => {
-    setValues((prev) => {
-      const next = { ...prev, [field]: value };
-      if (touched[field]) {
-        setErrors(validateUserProfile({ values: next }));
-      }
-      return next;
-    });
+    const next = { ...values, [field]: value };
+    setValues(next);
+    if (touched[field]) {
+      setErrors(validateUserProfile({ values: next }));
+    }
   };
 
   const updateSkills = (
@@ -57,18 +55,17 @@ export const useUserProfileViewModel = () => {
     event.preventDefault();
   };
 
-  const showError = (field: UserProfileField) => {
-    return Boolean(touched[field] && errors[field]);
+  const getVisibleError = (field: UserProfileField) => {
+    return touched[field] ? errors[field] : undefined;
   };
 
   return {
     values,
-    errors,
     handleTextChange,
     handleCheckboxChange,
     handleBlur,
     handleSubmit,
-    showError,
+    getVisibleError,
     updateSkills,
   };
 };

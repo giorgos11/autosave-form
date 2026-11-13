@@ -7,8 +7,7 @@ const enableMocking = async () => {
   if (import.meta.env.VITE_ENABLE_MOCKS !== "true") return;
 
   const { network } = await import("virtual:msw");
-  const { userProfileHandlers } =
-    await import("./features/user-profile/infrastructure/mocks/user-profile.handlers");
+  const { userProfileHandlers } = await import("@/features/user-profile/mocks");
 
   network.configure({ handlers: userProfileHandlers });
   await network.enable();

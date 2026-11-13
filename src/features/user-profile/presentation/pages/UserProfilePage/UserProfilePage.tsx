@@ -1,5 +1,6 @@
 import { COUNTRIES } from "@/features/user-profile/domain/constants/countries";
 import { BIO_MAX } from "@/features/user-profile/domain/constants/validation";
+import { FormField } from "../../components/FormField/FormField";
 import { SkillsList } from "../../components/SkillsList/SkillsList";
 import { useUserProfileViewModel } from "../../hooks/use-user-profile-view-model";
 import styles from "./UserProfilePage.module.css";
@@ -7,12 +8,11 @@ import styles from "./UserProfilePage.module.css";
 export const UserProfilePage = () => {
   const {
     values,
-    errors,
     handleTextChange,
     handleCheckboxChange,
     handleBlur,
     handleSubmit,
-    showError,
+    getVisibleError,
     updateSkills,
   } = useUserProfileViewModel();
 
@@ -23,149 +23,121 @@ export const UserProfilePage = () => {
         <p>Fill in your details below.</p>
       </header>
 
-      <div className={styles.field}>
-        <label htmlFor="fullName">
-          Full name <span aria-hidden="true">*</span>
-        </label>
-        <input
-          id="fullName"
-          name="fullName"
-          type="text"
-          autoComplete="name"
-          value={values.fullName}
-          onChange={handleTextChange}
-          onBlur={() => handleBlur("fullName")}
-          aria-invalid={showError("fullName")}
-          aria-describedby={
-            showError("fullName") ? "fullName-error" : undefined
-          }
-        />
-        {showError("fullName") && (
-          <p id="fullName-error" className={styles.error} role="alert">
-            {errors.fullName}
-          </p>
+      <FormField
+        id="fullName"
+        label="Full name"
+        required
+        error={getVisibleError("fullName")}
+      >
+        {(controlProps) => (
+          <input
+            {...controlProps}
+            name="fullName"
+            type="text"
+            autoComplete="name"
+            value={values.fullName}
+            onChange={handleTextChange}
+            onBlur={() => handleBlur("fullName")}
+          />
         )}
-      </div>
+      </FormField>
 
-      <div className={styles.field}>
-        <label htmlFor="email">
-          Email <span aria-hidden="true">*</span>
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          value={values.email}
-          onChange={handleTextChange}
-          onBlur={() => handleBlur("email")}
-          aria-invalid={showError("email")}
-          aria-describedby={showError("email") ? "email-error" : undefined}
-        />
-        {showError("email") && (
-          <p id="email-error" className={styles.error} role="alert">
-            {errors.email}
-          </p>
+      <FormField
+        id="email"
+        label="Email"
+        required
+        error={getVisibleError("email")}
+      >
+        {(controlProps) => (
+          <input
+            {...controlProps}
+            name="email"
+            type="email"
+            autoComplete="email"
+            value={values.email}
+            onChange={handleTextChange}
+            onBlur={() => handleBlur("email")}
+          />
         )}
-      </div>
+      </FormField>
 
-      <div className={styles.field}>
-        <label htmlFor="phone">Phone</label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+1 555 123 4567"
-          value={values.phone}
-          onChange={handleTextChange}
-          onBlur={() => handleBlur("phone")}
-          aria-invalid={showError("phone")}
-          aria-describedby={showError("phone") ? "phone-error" : undefined}
-        />
-        {showError("phone") && (
-          <p id="phone-error" className={styles.error} role="alert">
-            {errors.phone}
-          </p>
+      <FormField id="phone" label="Phone" error={getVisibleError("phone")}>
+        {(controlProps) => (
+          <input
+            {...controlProps}
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            placeholder="+1 555 123 4567"
+            value={values.phone}
+            onChange={handleTextChange}
+            onBlur={() => handleBlur("phone")}
+          />
         )}
-      </div>
+      </FormField>
 
-      <div className={styles.field}>
-        <label htmlFor="country">
-          Country <span aria-hidden="true">*</span>
-        </label>
-        <select
-          id="country"
-          name="country"
-          value={values.country}
-          onChange={handleTextChange}
-          onBlur={() => handleBlur("country")}
-          aria-invalid={showError("country")}
-          aria-describedby={showError("country") ? "country-error" : undefined}
-        >
-          <option value="">Select a country</option>
-          {COUNTRIES.map((country) => (
-            <option key={country} value={country}>
-              {country}
-            </option>
-          ))}
-        </select>
-        {showError("country") && (
-          <p id="country-error" className={styles.error} role="alert">
-            {errors.country}
-          </p>
+      <FormField
+        id="country"
+        label="Country"
+        required
+        error={getVisibleError("country")}
+      >
+        {(controlProps) => (
+          <select
+            {...controlProps}
+            name="country"
+            value={values.country}
+            onChange={handleTextChange}
+            onBlur={() => handleBlur("country")}
+          >
+            <option value="">Select a country</option>
+            {COUNTRIES.map((country) => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
         )}
-      </div>
+      </FormField>
 
-      <div className={styles.field}>
-        <label htmlFor="bio">
-          Bio
-          <span className={styles.hint}>
-            {values.bio.length}/{BIO_MAX}
-          </span>
-        </label>
-        <textarea
-          id="bio"
-          name="bio"
-          rows={4}
-          maxLength={BIO_MAX}
-          value={values.bio}
-          onChange={handleTextChange}
-          onBlur={() => handleBlur("bio")}
-          aria-invalid={showError("bio")}
-          aria-describedby={showError("bio") ? "bio-error" : undefined}
-        />
-        {showError("bio") && (
-          <p id="bio-error" className={styles.error} role="alert">
-            {errors.bio}
-          </p>
+      <FormField
+        id="bio"
+        label="Bio"
+        hint={`${values.bio.length}/${BIO_MAX}`}
+        error={getVisibleError("bio")}
+      >
+        {(controlProps) => (
+          <textarea
+            {...controlProps}
+            name="bio"
+            rows={4}
+            maxLength={BIO_MAX}
+            value={values.bio}
+            onChange={handleTextChange}
+            onBlur={() => handleBlur("bio")}
+          />
         )}
-      </div>
+      </FormField>
 
-      <div className={styles.field}>
-        <label htmlFor="dateOfBirth">
-          Date of birth <span aria-hidden="true">*</span>
-        </label>
-        <input
-          id="dateOfBirth"
-          name="dateOfBirth"
-          type="date"
-          value={values.dateOfBirth}
-          onChange={handleTextChange}
-          onBlur={() => handleBlur("dateOfBirth")}
-          aria-invalid={showError("dateOfBirth")}
-          aria-describedby={
-            showError("dateOfBirth") ? "dateOfBirth-error" : undefined
-          }
-        />
-        {showError("dateOfBirth") && (
-          <p id="dateOfBirth-error" className={styles.error} role="alert">
-            {errors.dateOfBirth}
-          </p>
+      <FormField
+        id="dateOfBirth"
+        label="Date of birth"
+        required
+        error={getVisibleError("dateOfBirth")}
+      >
+        {(controlProps) => (
+          <input
+            {...controlProps}
+            name="dateOfBirth"
+            type="date"
+            value={values.dateOfBirth}
+            onChange={handleTextChange}
+            onBlur={() => handleBlur("dateOfBirth")}
+          />
         )}
-      </div>
+      </FormField>
 
-      <div className={`${styles.field} ${styles.checkboxField}`}>
+      <div className={styles.checkboxField}>
         <label htmlFor="newsletter">
           <input
             id="newsletter"

@@ -1,10 +1,11 @@
+import type { Country } from "../constants/countries";
 import type { Skill } from "./skill";
 
 export type UserProfile = {
   readonly fullName: string;
   readonly email: string;
   readonly phone: string;
-  readonly country: string;
+  readonly country: Country | "";
   readonly bio: string;
   readonly dateOfBirth: string;
   readonly newsletter: boolean;
