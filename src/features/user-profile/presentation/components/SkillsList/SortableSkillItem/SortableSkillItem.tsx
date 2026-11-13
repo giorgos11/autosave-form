@@ -1,12 +1,11 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { SKILL_NAME_MAX } from "@/features/user-profile/domain/constants/validation";
 import type { Skill } from "@/features/user-profile/domain/entities/skill";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import styles from "./SortableSkillItem.module.css";
 
 type SortableSkillItemProps = {
   skill: Skill;
-  /** 1-based position in the list, used for accessible labels. */
   position: number;
   isFirst: boolean;
   isLast: boolean;
@@ -40,12 +39,12 @@ export const SortableSkillItem = ({
     transition,
   };
 
-  const className = [styles.item, isDragging && styles.itemDragging]
+  const liClassName = [styles.item, isDragging && styles.itemDragging]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <li ref={setNodeRef} style={style} className={className}>
+    <li ref={setNodeRef} style={style} className={liClassName}>
       <button
         type="button"
         className={styles.dragHandle}
