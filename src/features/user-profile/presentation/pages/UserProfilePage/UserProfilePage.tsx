@@ -13,12 +13,7 @@ export const UserProfilePage = () => {
     handleBlur,
     handleSubmit,
     showError,
-    handleAddSkill,
-    handleRemoveSkill,
-    handleMoveSkillUp,
-    handleMoveSkillDown,
-    handleDragEnd,
-    handleSkillNameChange,
+    updateSkills,
   } = useUserProfileViewModel();
 
   return (
@@ -183,15 +178,7 @@ export const UserProfilePage = () => {
         </label>
       </div>
 
-      <SkillsList
-        skills={values.skills}
-        onAddSkill={handleAddSkill}
-        onRemoveSkill={handleRemoveSkill}
-        onMoveSkillUp={handleMoveSkillUp}
-        onMoveSkillDown={handleMoveSkillDown}
-        onDragEnd={handleDragEnd}
-        onSkillNameChange={handleSkillNameChange}
-      />
+      <SkillsList skills={values.skills} onSkillsChange={updateSkills} />
     </form>
   );
 };

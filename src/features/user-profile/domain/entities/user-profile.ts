@@ -1,14 +1,14 @@
 import type { Skill } from "./skill";
 
 export type UserProfile = {
-  fullName: string;
-  email: string;
-  phone: string;
-  country: string;
-  bio: string;
-  dateOfBirth: string;
-  newsletter: boolean;
-  skills: Skill[];
+  readonly fullName: string;
+  readonly email: string;
+  readonly phone: string;
+  readonly country: string;
+  readonly bio: string;
+  readonly dateOfBirth: string;
+  readonly newsletter: boolean;
+  readonly skills: readonly Skill[];
 };
 
 export type UserProfileField = Exclude<keyof UserProfile, "skills">;
