@@ -1,43 +1,41 @@
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
 import type { DragEndEvent } from "@dnd-kit/core";
+import { INITIAL_USER_PROFILE } from "../../domain/constants/initial-user-profile";
+import type {
+  UserProfile,
+  UserProfileErrors,
+  UserProfileField,
+} from "../../domain/entities/user-profile";
 import {
   createSkill,
   moveSkill,
   removeSkill,
   updateSkillName,
-} from "../SkillsList/SkillsList.service";
-import { INITIAL_VALUES } from "./UserInfoForm.constants";
-import { validate } from "./UserInfoForm.service";
-import type {
-  UserInfoFormErrors,
-  UserInfoFormField,
-  UserInfoFormValues,
-} from "./UserInfoForm.types";
+} from "../../domain/rules/skills";
+import { validateUserProfile } from "../../domain/rules/validate-user-profile";
 
-export const useUserInfoForm = () => {
-  const [values, setValues] = useState<UserInfoFormValues>(INITIAL_VALUES);
-  const [errors, setErrors] = useState<UserInfoFormErrors>({});
+export const useUserProfileViewModel = () => {
+  const [values, setValues] = useState<UserProfile>(INITIAL_USER_PROFILE);
+  const [errors, setErrors] = useState<UserProfileErrors>({});
   const [touched, setTouched] = useState<
-    Partial<Record<UserInfoFormField, boolean>>
+    Partial<Record<UserProfileField, boolean>>
   >({});
 
-  const updateField = <K extends UserInfoFormField>(
+  const updateField = <K extends UserProfileField>(
     field: K,
-    value: UserInfoFormValues[K],
+    value: UserProfile[K],
   ) => {
     setValues((prev) => {
       const next = { ...prev, [field]: value };
       if (touched[field]) {
-        setErrors(validate({ values: next }));
+        setErrors(validateUserProfile({ values: next }));
       }
       return next;
     });
   };
 
   const updateSkills = (
-    getNextSkills: (
-      skills: UserInfoFormValues["skills"],
-    ) => UserInfoFormValues["skills"],
+    getNextSkills: (skills: UserProfile["skills"]) => UserProfile["skills"],
   ) => {
     setValues((prev) => ({
       ...prev,
@@ -51,23 +49,23 @@ export const useUserInfoForm = () => {
     >,
   ) => {
     const { name, value } = event.target;
-    updateField(name as UserInfoFormField, value as never);
+    updateField(name as UserProfileField, value as never);
   };
 
   const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>) => {
     updateField("newsletter", event.target.checked);
   };
 
-  const handleBlur = (field: UserInfoFormField) => {
+  const handleBlur = (field: UserProfileField) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    setErrors(validate({ values }));
+    setErrors(validateUserProfile({ values }));
   };
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
   };
 
-  const showError = (field: UserInfoFormField) => {
+  const showError = (field: UserProfileField) => {
     return Boolean(touched[field] && errors[field]);
   };
 

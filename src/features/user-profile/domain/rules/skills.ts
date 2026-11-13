@@ -1,4 +1,4 @@
-import type { Skill } from "./SkillsList.types";
+import type { Skill } from "../entities/skill";
 
 export type CreateSkillParams = {
   name?: string;

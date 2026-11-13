@@ -1,8 +1,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { ChangeEvent } from "react";
-import { SKILL_NAME_MAX } from "../SkillsList/SkillsList.constants";
-import type { Skill } from "../SkillsList/SkillsList.types";
+import { SKILL_NAME_MAX } from "@/features/user-profile/domain/constants/validation";
+import type { Skill } from "@/features/user-profile/domain/entities/skill";
 import styles from "./SortableSkillItem.module.css";
 
 type SortableSkillItemProps = {

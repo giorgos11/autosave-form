@@ -13,8 +13,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import type { ChangeEvent } from "react";
-import { SortableSkillItem } from "../SortableSkillItem/SortableSkillItem.component";
-import type { Skill } from "./SkillsList.types";
+import type { Skill } from "@/features/user-profile/domain/entities/skill";
+import { SortableSkillItem } from "./SortableSkillItem/SortableSkillItem";
 import styles from "./SkillsList.module.css";
 
 type SkillsListProps = {
