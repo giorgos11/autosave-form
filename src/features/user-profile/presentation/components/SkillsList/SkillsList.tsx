@@ -1,3 +1,4 @@
+import type { Skill } from "@/features/user-profile/domain/entities/skill";
 import {
   DndContext,
   KeyboardSensor,
@@ -12,10 +13,9 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import type { Skill } from "@/features/user-profile/domain/entities/skill";
+import styles from "./SkillsList.module.css";
 import { SortableSkillItem } from "./SortableSkillItem/SortableSkillItem";
 import { useSkillsEditor, type UpdateSkills } from "./use-skills-editor";
-import styles from "./SkillsList.module.css";
 
 type SkillsListProps = {
   skills: readonly Skill[];
