@@ -1,25 +1,26 @@
-import { isOlderThan } from "../../utils/isOlderThan";
+import { isOlderThan } from "@/shared/lib/is-older-than";
 import {
   BIO_MAX,
   EMAIL_PATTERN,
+  MIN_AGE,
+  MIN_FULL_NAME_LENGTH,
   PHONE_PATTERN,
-} from "./UserInfoForm.constants";
-import type {
-  UserInfoFormErrors,
-  UserInfoFormValues,
-} from "./UserInfoForm.types";
+} from "../constants/validation";
+import type { UserProfile, UserProfileErrors } from "../entities/user-profile";
 
-export type ValidateParams = {
-  values: UserInfoFormValues;
+export type ValidateUserProfileParams = {
+  values: UserProfile;
 };
 
-export const validate = ({ values }: ValidateParams): UserInfoFormErrors => {
-  const errors: UserInfoFormErrors = {};
+export const validateUserProfile = ({
+  values,
+}: ValidateUserProfileParams): UserProfileErrors => {
+  const errors: UserProfileErrors = {};
 
   if (!values.fullName.trim()) {
     errors.fullName = "Full name is required";
-  } else if (values.fullName.trim().length < 2) {
-    errors.fullName = "Full name must be at least 2 characters";
+  } else if (values.fullName.trim().length < MIN_FULL_NAME_LENGTH) {
+    errors.fullName = `Full name must be at least ${MIN_FULL_NAME_LENGTH} characters`;
   }
 
   if (!values.email.trim()) {
@@ -42,8 +43,8 @@ export const validate = ({ values }: ValidateParams): UserInfoFormErrors => {
 
   if (!values.dateOfBirth) {
     errors.dateOfBirth = "Date of birth is required";
-  } else if (!isOlderThan({ dateOfBirth: values.dateOfBirth, age: 18 })) {
-    errors.dateOfBirth = "You must be at least 18 years old";
+  } else if (!isOlderThan({ dateOfBirth: values.dateOfBirth, age: MIN_AGE })) {
+    errors.dateOfBirth = `You must be at least ${MIN_AGE} years old`;
   }
 
   return errors;

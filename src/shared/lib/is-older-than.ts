@@ -3,7 +3,10 @@ export type IsOlderThanParams = {
   age: number;
 };
 
-export const isOlderThan = ({ dateOfBirth, age }: IsOlderThanParams): boolean => {
+export const isOlderThan = ({
+  dateOfBirth,
+  age,
+}: IsOlderThanParams): boolean => {
   const dob = new Date(dateOfBirth);
   if (Number.isNaN(dob.getTime())) return false;
 

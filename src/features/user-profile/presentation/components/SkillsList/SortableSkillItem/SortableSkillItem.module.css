@@ -9,18 +9,22 @@
   z-index: 1;
   opacity: 0.9;
   box-shadow: var(--shadow);
-  border-radius: 6px;
+  border-radius: var(--radius);
+}
+
+.dragHandle,
+.actionButton {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  font: inherit;
+  font-size: 0.85rem;
 }
 
 .dragHandle {
   flex-shrink: 0;
   padding: 0.4rem 0.45rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
   color: var(--text);
-  font: inherit;
-  font-size: 0.85rem;
   line-height: 1;
   cursor: grab;
   touch-action: none;
@@ -30,19 +34,19 @@
   cursor: grabbing;
 }
 
-.item input[type="text"] {
+.nameInput {
   flex: 1;
   min-width: 0;
   box-sizing: border-box;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--bg);
   color: var(--text-h);
   font: inherit;
 }
 
-.item input[type="text"]:focus {
+.nameInput:focus {
   outline: none;
   border-color: var(--accent);
 }
@@ -53,22 +57,17 @@
   flex-shrink: 0;
 }
 
-.actions button {
+.actionButton {
   padding: 0.4rem 0.55rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
   color: var(--text-h);
-  font: inherit;
-  font-size: 0.85rem;
   cursor: pointer;
 }
 
-.actions button:hover:not(:disabled) {
+.actionButton:hover:not(:disabled) {
   border-color: var(--accent);
 }
 
-.actions button:disabled {
+.actionButton:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }

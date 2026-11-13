@@ -1,4 +1,4 @@
-import type { Skill } from "./SkillsList.types";
+import type { Skill } from "../entities/skill";
 
 export type CreateSkillParams = {
   name?: string;
@@ -10,7 +10,7 @@ export const createSkill = ({ name = "" }: CreateSkillParams = {}): Skill => ({
 });
 
 export type MoveSkillParams = {
-  skills: Skill[];
+  skills: readonly Skill[];
   fromIndex: number;
   toIndex: number;
 };
@@ -19,7 +19,7 @@ export const moveSkill = ({
   skills,
   fromIndex,
   toIndex,
-}: MoveSkillParams): Skill[] => {
+}: MoveSkillParams): readonly Skill[] => {
   if (
     fromIndex < 0 ||
     toIndex < 0 ||
@@ -37,16 +37,19 @@ export const moveSkill = ({
 };
 
 export type RemoveSkillParams = {
-  skills: Skill[];
+  skills: readonly Skill[];
   id: string;
 };
 
-export const removeSkill = ({ skills, id }: RemoveSkillParams): Skill[] => {
+export const removeSkill = ({
+  skills,
+  id,
+}: RemoveSkillParams): readonly Skill[] => {
   return skills.filter((skill) => skill.id !== id);
 };
 
 export type UpdateSkillNameParams = {
-  skills: Skill[];
+  skills: readonly Skill[];
   id: string;
   name: string;
 };
@@ -55,6 +58,6 @@ export const updateSkillName = ({
   skills,
   id,
   name,
-}: UpdateSkillNameParams): Skill[] => {
+}: UpdateSkillNameParams): readonly Skill[] => {
   return skills.map((skill) => (skill.id === id ? { ...skill, name } : skill));
 };

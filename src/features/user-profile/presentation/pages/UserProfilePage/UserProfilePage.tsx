@@ -1,9 +1,10 @@
-import { SkillsList } from "../SkillsList/SkillsList.component";
-import { BIO_MAX, COUNTRIES } from "./UserInfoForm.constants";
-import styles from "./UserInfoForm.module.css";
-import { useUserInfoForm } from "./useUserInfoForm";
+import { COUNTRIES } from "@/features/user-profile/domain/constants/countries";
+import { BIO_MAX } from "@/features/user-profile/domain/constants/validation";
+import { SkillsList } from "../../components/SkillsList/SkillsList";
+import { useUserProfileViewModel } from "../../hooks/use-user-profile-view-model";
+import styles from "./UserProfilePage.module.css";
 
-export const UserInfoForm = () => {
+export const UserProfilePage = () => {
   const {
     values,
     errors,
@@ -12,13 +13,8 @@ export const UserInfoForm = () => {
     handleBlur,
     handleSubmit,
     showError,
-    handleAddSkill,
-    handleRemoveSkill,
-    handleMoveSkillUp,
-    handleMoveSkillDown,
-    handleDragEnd,
-    handleSkillNameChange,
-  } = useUserInfoForm();
+    updateSkills,
+  } = useUserProfileViewModel();
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -182,15 +178,7 @@ export const UserInfoForm = () => {
         </label>
       </div>
 
-      <SkillsList
-        skills={values.skills}
-        onAddSkill={handleAddSkill}
-        onRemoveSkill={handleRemoveSkill}
-        onMoveSkillUp={handleMoveSkillUp}
-        onMoveSkillDown={handleMoveSkillDown}
-        onDragEnd={handleDragEnd}
-        onSkillNameChange={handleSkillNameChange}
-      />
+      <SkillsList skills={values.skills} onSkillsChange={updateSkills} />
     </form>
   );
 };

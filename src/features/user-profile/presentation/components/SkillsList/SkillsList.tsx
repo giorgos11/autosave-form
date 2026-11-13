@@ -1,3 +1,4 @@
+import type { Skill } from "@/features/user-profile/domain/entities/skill";
 import {
   DndContext,
   KeyboardSensor,
@@ -12,36 +13,31 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import type { ChangeEvent } from "react";
-import { SortableSkillItem } from "../SortableSkillItem/SortableSkillItem.component";
-import type { Skill } from "./SkillsList.types";
 import styles from "./SkillsList.module.css";
+import { SortableSkillItem } from "./SortableSkillItem/SortableSkillItem";
+import { useSkillsEditor, type UpdateSkills } from "./use-skills-editor";
 
 type SkillsListProps = {
-  skills: Skill[];
-  onAddSkill: () => void;
-  onRemoveSkill: (id: string) => void;
-  onMoveSkillUp: (index: number) => void;
-  onMoveSkillDown: (index: number) => void;
-  onDragEnd: (event: DragEndEvent) => void;
-  onSkillNameChange: (event: ChangeEvent<HTMLInputElement>, id: string) => void;
+  skills: readonly Skill[];
+  onSkillsChange: UpdateSkills;
 };
 
-export const SkillsList = ({
-  skills,
-  onAddSkill,
-  onRemoveSkill,
-  onMoveSkillUp,
-  onMoveSkillDown,
-  onDragEnd,
-  onSkillNameChange,
-}: SkillsListProps) => {
+export const SkillsList = ({ skills, onSkillsChange }: SkillsListProps) => {
+  const { add, remove, rename, moveUp, moveDown, reorder } = useSkillsEditor({
+    updateSkills: onSkillsChange,
+  });
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    reorder({ activeId: String(active.id), overId: String(over.id) });
+  };
 
   return (
     <section className={styles.skills}>
@@ -56,7 +52,7 @@ export const SkillsList = ({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          onDragEnd={onDragEnd}
+          onDragEnd={handleDragEnd}
         >
           <SortableContext
             items={skills.map((skill) => skill.id)}
@@ -67,12 +63,13 @@ export const SkillsList = ({
                 <SortableSkillItem
                   key={skill.id}
                   skill={skill}
-                  index={index}
-                  total={skills.length}
-                  onNameChange={onSkillNameChange}
-                  onMoveUp={onMoveSkillUp}
-                  onMoveDown={onMoveSkillDown}
-                  onRemove={onRemoveSkill}
+                  position={index + 1}
+                  isFirst={index === 0}
+                  isLast={index === skills.length - 1}
+                  onNameChange={(name) => rename(skill.id, name)}
+                  onMoveUp={() => moveUp(index)}
+                  onMoveDown={() => moveDown(index)}
+                  onRemove={() => remove(skill.id)}
                 />
               ))}
             </ol>
@@ -80,7 +77,7 @@ export const SkillsList = ({
         </DndContext>
       )}
 
-      <button type="button" className={styles.addButton} onClick={onAddSkill}>
+      <button type="button" className={styles.addButton} onClick={add}>
         Add skill
       </button>
     </section>
