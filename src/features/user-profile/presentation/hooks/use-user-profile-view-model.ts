@@ -1,10 +1,13 @@
 import {
   useEffect,
-  useRef,
   useState,
   type ChangeEvent,
   type SubmitEvent,
 } from "react";
+import {
+  createProfileAutosave,
+  type AutosaveStatus,
+} from "../../application/create-profile-autosave";
 import { INITIAL_USER_PROFILE } from "../../domain/constants/initial-user-profile";
 import type {
   UserProfile,
@@ -12,10 +15,7 @@ import type {
   UserProfileField,
 } from "../../domain/entities/user-profile";
 import { validateUserProfile } from "../../domain/rules/validate-user-profile";
-import type { SaveStatusKind } from "../components/SaveStatus/SaveStatus";
 import { useUserProfileDependencies } from "../providers/user-profile-dependencies.context";
-
-const SAVE_DEBOUNCE_MS = 500;
 
 export const useUserProfileViewModel = () => {
   const { save } = useUserProfileDependencies();
@@ -24,56 +24,25 @@ export const useUserProfileViewModel = () => {
   const [touched, setTouched] = useState<
     Partial<Record<UserProfileField, boolean>>
   >({});
-  const [saveStatus, setSaveStatus] = useState<SaveStatusKind>("idle");
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
+  const [autosave] = useState(() => createProfileAutosave({ save }));
+  const [saveStatus, setSaveStatus] = useState<AutosaveStatus>(() =>
+    autosave.getStatus(),
   );
-  const latestRef = useRef<UserProfile>(INITIAL_USER_PROFILE);
-  const generationRef = useRef(0);
-  const savedGenerationRef = useRef(0);
-  const inFlightRef = useRef(false);
 
   useEffect(() => {
+    const unsubscribe = autosave.subscribe(() => {
+      setSaveStatus(autosave.getStatus());
+    });
+
     return () => {
-      clearTimeout(saveTimerRef.current);
+      unsubscribe();
+      autosave.dispose();
     };
-  }, []);
-
-  const runSave = async () => {
-    if (inFlightRef.current) return;
-    if (savedGenerationRef.current === generationRef.current) return;
-
-    inFlightRef.current = true;
-    setSaveStatus("saving");
-
-    const generation = generationRef.current;
-    const snapshot = latestRef.current;
-
-    try {
-      await save(snapshot);
-      savedGenerationRef.current = generation;
-      inFlightRef.current = false;
-
-      if (savedGenerationRef.current !== generationRef.current) {
-        await runSave();
-        return;
-      }
-
-      setSaveStatus("saved");
-    } catch {
-      inFlightRef.current = false;
-      setSaveStatus("error");
-    }
-  };
+  }, [autosave]);
 
   const commit = (next: UserProfile) => {
     setValues(next);
-    latestRef.current = next;
-    generationRef.current += 1;
-    clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      void runSave();
-    }, SAVE_DEBOUNCE_MS);
+    autosave.schedule(next);
   };
 
   const updateField = <K extends UserProfileField>(

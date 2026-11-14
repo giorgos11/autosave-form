@@ -1,19 +1,18 @@
+import type { AutosaveStatus } from "../../../application/create-profile-autosave";
 import styles from "./SaveStatus.module.css";
 
-export type SaveStatusKind = "idle" | "saving" | "saved" | "error";
-
 type SaveStatusProps = {
-  status: SaveStatusKind;
+  status: AutosaveStatus;
 };
 
-const messages: Record<SaveStatusKind, string> = {
+const messages: Record<AutosaveStatus, string> = {
   idle: "Changes are saved automatically.",
   saving: "Saving…",
   saved: "Saved",
   error: "Error saving",
 };
 
-const tones: Record<SaveStatusKind, "neutral" | "busy" | "success" | "error"> =
+const tones: Record<AutosaveStatus, "neutral" | "busy" | "success" | "error"> =
   {
     idle: "neutral",
     saving: "busy",
