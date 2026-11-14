@@ -8,7 +8,7 @@ import { useUserProfileViewModel } from "../../hooks/use-user-profile-view-model
 import styles from "./UserProfilePage.module.css";
 
 export const UserProfilePage = () => {
-  const { autosave, saveStatus } = useProfileAutosave();
+  const autosave = useProfileAutosave();
   const {
     values,
     handleTextChange,
@@ -24,7 +24,7 @@ export const UserProfilePage = () => {
       <header className={styles.header}>
         <h1>User profile</h1>
         <p>Fill in your details below.</p>
-        <SaveStatus status={saveStatus} />
+        <SaveStatus autosave={autosave} />
       </header>
 
       <FormField
