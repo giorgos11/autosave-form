@@ -1,4 +1,10 @@
-import { useState, type ChangeEvent, type SubmitEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type SubmitEvent,
+} from "react";
 import { INITIAL_USER_PROFILE } from "../../domain/constants/initial-user-profile";
 import type {
   UserProfile,
@@ -6,19 +12,46 @@ import type {
   UserProfileField,
 } from "../../domain/entities/user-profile";
 import { validateUserProfile } from "../../domain/rules/validate-user-profile";
+import type { SaveStatusKind } from "../components/SaveStatus/SaveStatus";
+import { useUserProfileDependencies } from "../providers/user-profile-dependencies.context";
+
+const SAVE_DEBOUNCE_MS = 500;
+
 export const useUserProfileViewModel = () => {
+  const { save } = useUserProfileDependencies();
   const [values, setValues] = useState<UserProfile>(INITIAL_USER_PROFILE);
   const [errors, setErrors] = useState<UserProfileErrors>({});
   const [touched, setTouched] = useState<
     Partial<Record<UserProfileField, boolean>>
   >({});
+  const [saveStatus, setSaveStatus] = useState<SaveStatusKind>("idle");
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(saveTimerRef.current);
+    };
+  }, []);
+
+  const commit = (next: UserProfile) => {
+    setValues(next);
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      setSaveStatus("saving");
+      save(next)
+        .then(() => setSaveStatus("saved"))
+        .catch(() => setSaveStatus("error"));
+    }, SAVE_DEBOUNCE_MS);
+  };
 
   const updateField = <K extends UserProfileField>(
     field: K,
     value: UserProfile[K],
   ) => {
     const next = { ...values, [field]: value };
-    setValues(next);
+    commit(next);
     if (touched[field]) {
       setErrors(validateUserProfile({ values: next }));
     }
@@ -27,10 +60,7 @@ export const useUserProfileViewModel = () => {
   const updateSkills = (
     getNextSkills: (skills: UserProfile["skills"]) => UserProfile["skills"],
   ) => {
-    setValues((prev) => ({
-      ...prev,
-      skills: getNextSkills(prev.skills),
-    }));
+    commit({ ...values, skills: getNextSkills(values.skills) });
   };
 
   const handleTextChange = (
@@ -61,6 +91,7 @@ export const useUserProfileViewModel = () => {
 
   return {
     values,
+    saveStatus,
     handleTextChange,
     handleCheckboxChange,
     handleBlur,
