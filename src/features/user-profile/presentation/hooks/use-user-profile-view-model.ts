@@ -28,6 +28,10 @@ export const useUserProfileViewModel = () => {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const latestRef = useRef<UserProfile>(INITIAL_USER_PROFILE);
+  const generationRef = useRef(0);
+  const savedGenerationRef = useRef(0);
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -35,14 +39,40 @@ export const useUserProfileViewModel = () => {
     };
   }, []);
 
+  const runSave = async () => {
+    if (inFlightRef.current) return;
+    if (savedGenerationRef.current === generationRef.current) return;
+
+    inFlightRef.current = true;
+    setSaveStatus("saving");
+
+    const generation = generationRef.current;
+    const snapshot = latestRef.current;
+
+    try {
+      await save(snapshot);
+      savedGenerationRef.current = generation;
+      inFlightRef.current = false;
+
+      if (savedGenerationRef.current !== generationRef.current) {
+        await runSave();
+        return;
+      }
+
+      setSaveStatus("saved");
+    } catch {
+      inFlightRef.current = false;
+      setSaveStatus("error");
+    }
+  };
+
   const commit = (next: UserProfile) => {
     setValues(next);
+    latestRef.current = next;
+    generationRef.current += 1;
     clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      setSaveStatus("saving");
-      save(next)
-        .then(() => setSaveStatus("saved"))
-        .catch(() => setSaveStatus("error"));
+      void runSave();
     }, SAVE_DEBOUNCE_MS);
   };
 
