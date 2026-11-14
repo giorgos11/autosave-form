@@ -3,20 +3,21 @@ import { BIO_MAX } from "@/features/user-profile/domain/constants/validation";
 import { FormField } from "../../components/FormField/FormField";
 import { SaveStatus } from "../../components/SaveStatus/SaveStatus";
 import { SkillsList } from "../../components/SkillsList/SkillsList";
+import { useProfileAutosave } from "../../hooks/use-profile-autosave";
 import { useUserProfileViewModel } from "../../hooks/use-user-profile-view-model";
 import styles from "./UserProfilePage.module.css";
 
 export const UserProfilePage = () => {
+  const { autosave, saveStatus } = useProfileAutosave();
   const {
     values,
-    saveStatus,
     handleTextChange,
     handleCheckboxChange,
     handleBlur,
     handleSubmit,
     getVisibleError,
     updateSkills,
-  } = useUserProfileViewModel();
+  } = useUserProfileViewModel({ autosave });
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>

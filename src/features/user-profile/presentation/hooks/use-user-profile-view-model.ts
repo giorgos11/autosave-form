@@ -1,13 +1,5 @@
-import {
-  useEffect,
-  useState,
-  type ChangeEvent,
-  type SubmitEvent,
-} from "react";
-import {
-  createProfileAutosave,
-  type AutosaveStatus,
-} from "../../application/create-profile-autosave";
+import { useState, type ChangeEvent, type SubmitEvent } from "react";
+import type { ProfileAutosave } from "../../application/create-profile-autosave";
 import { INITIAL_USER_PROFILE } from "../../domain/constants/initial-user-profile";
 import type {
   UserProfile,
@@ -15,30 +7,19 @@ import type {
   UserProfileField,
 } from "../../domain/entities/user-profile";
 import { validateUserProfile } from "../../domain/rules/validate-user-profile";
-import { useUserProfileDependencies } from "../providers/user-profile-dependencies.context";
 
-export const useUserProfileViewModel = () => {
-  const { save } = useUserProfileDependencies();
+export type UseUserProfileViewModelParams = {
+  autosave: Pick<ProfileAutosave, "schedule">;
+};
+
+export const useUserProfileViewModel = ({
+  autosave,
+}: UseUserProfileViewModelParams) => {
   const [values, setValues] = useState<UserProfile>(INITIAL_USER_PROFILE);
   const [errors, setErrors] = useState<UserProfileErrors>({});
   const [touched, setTouched] = useState<
     Partial<Record<UserProfileField, boolean>>
   >({});
-  const [autosave] = useState(() => createProfileAutosave({ save }));
-  const [saveStatus, setSaveStatus] = useState<AutosaveStatus>(() =>
-    autosave.getStatus(),
-  );
-
-  useEffect(() => {
-    const unsubscribe = autosave.subscribe(() => {
-      setSaveStatus(autosave.getStatus());
-    });
-
-    return () => {
-      unsubscribe();
-      autosave.dispose();
-    };
-  }, [autosave]);
 
   const commit = (next: UserProfile) => {
     setValues(next);
@@ -90,7 +71,6 @@ export const useUserProfileViewModel = () => {
 
   return {
     values,
-    saveStatus,
     handleTextChange,
     handleCheckboxChange,
     handleBlur,
