@@ -1,6 +1,7 @@
 import { COUNTRIES } from "@/features/user-profile/domain/constants/countries";
 import { BIO_MAX } from "@/features/user-profile/domain/constants/validation";
 import { FormField } from "../../components/FormField/FormField";
+import { SaveStatus } from "../../components/SaveStatus/SaveStatus";
 import { SkillsList } from "../../components/SkillsList/SkillsList";
 import { useUserProfileViewModel } from "../../hooks/use-user-profile-view-model";
 import styles from "./UserProfilePage.module.css";
@@ -8,6 +9,7 @@ import styles from "./UserProfilePage.module.css";
 export const UserProfilePage = () => {
   const {
     values,
+    saveStatus,
     handleTextChange,
     handleCheckboxChange,
     handleBlur,
@@ -21,6 +23,7 @@ export const UserProfilePage = () => {
       <header className={styles.header}>
         <h1>User profile</h1>
         <p>Fill in your details below.</p>
+        <SaveStatus status={saveStatus} />
       </header>
 
       <FormField

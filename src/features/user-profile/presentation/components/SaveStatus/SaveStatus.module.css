@@ -1,0 +1,52 @@
+.saveStatus {
+  --tone-color: var(--border);
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.saveStatus[data-tone="busy"] {
+  --tone-color: var(--accent);
+}
+
+.saveStatus[data-tone="success"] {
+  --tone-color: #16a34a;
+}
+
+.saveStatus[data-tone="error"] {
+  --tone-color: #dc2626;
+  color: #dc2626;
+}
+
+.indicator {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--tone-color);
+}
+
+.saveStatus[data-tone="busy"] .indicator {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .saveStatus[data-tone="busy"] .indicator {
+    animation: none;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.message {
+  margin: 0;
+}
