@@ -1,5 +1,6 @@
 import {
   createHttpUserProfileRepository,
+  createLocalStorageUserProfileDraftStore,
   createSaveUserProfile,
   type UserProfileDependencies,
 } from "@/features/user-profile";
@@ -13,6 +14,7 @@ const userProfileRepository = createHttpUserProfileRepository({ httpClient });
 export const dependencies = {
   userProfile: {
     save: createSaveUserProfile({ repository: userProfileRepository }),
+    draftStore: createLocalStorageUserProfileDraftStore(),
   } satisfies UserProfileDependencies,
 } as const;
 

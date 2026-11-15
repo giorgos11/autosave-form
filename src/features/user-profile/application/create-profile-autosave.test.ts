@@ -347,4 +347,33 @@ describe("createProfileAutosave", () => {
 
     expect(save).toHaveBeenCalledTimes(1);
   });
+
+  it("persists an unsynced draft on schedule and marks it synced after save", async () => {
+    const save = vi.fn<SaveUserProfile>().mockResolvedValue(undefined);
+    const draftStore = {
+      load: vi.fn(),
+      save: vi.fn(),
+      clear: vi.fn(),
+    };
+    const snapshot = profile({ fullName: "Ada" });
+    const autosave = createProfileAutosave({
+      save,
+      draftStore,
+      debounceMs: 500,
+    });
+
+    autosave.schedule(snapshot);
+    expect(draftStore.save).toHaveBeenCalledWith({
+      profile: snapshot,
+      synced: false,
+    });
+
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+
+    expect(draftStore.save).toHaveBeenLastCalledWith({
+      profile: snapshot,
+      synced: true,
+    });
+  });
 });

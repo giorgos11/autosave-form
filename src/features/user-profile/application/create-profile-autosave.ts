@@ -1,5 +1,6 @@
 import type { UserProfile } from "../domain/entities/user-profile";
 import { isRetryableSaveError } from "../domain/errors/save-user-profile.error";
+import type { UserProfileDraftStore } from "../domain/ports/user-profile-draft.store";
 import type { SaveUserProfile } from "./save-user-profile";
 
 export type AutosaveStatus =
@@ -23,6 +24,8 @@ export type ProfileAutosave = {
 
 export type CreateProfileAutosaveParams = {
   save: SaveUserProfile;
+  draftStore?: UserProfileDraftStore;
+  initialSnapshot?: UserProfile;
   debounceMs?: number;
   maxRetries?: number;
   retryBaseDelayMs?: number;
@@ -34,6 +37,8 @@ const isSameStatus = (a: AutosaveStatus, b: AutosaveStatus) =>
 
 export const createProfileAutosave = ({
   save,
+  draftStore,
+  initialSnapshot,
   debounceMs = 500,
   maxRetries = 3,
   retryBaseDelayMs = 1000,
@@ -41,7 +46,7 @@ export const createProfileAutosave = ({
   const listeners = new Set<() => void>();
 
   let status: AutosaveStatus = { kind: "idle" };
-  let latestSnapshot: UserProfile | null = null;
+  let latestSnapshot: UserProfile | null = initialSnapshot ?? null;
   let generation = 0;
   let savedGeneration = 0;
   let retryAttempts = 0;
@@ -79,13 +84,11 @@ export const createProfileAutosave = ({
     }, delayMs);
   };
 
+  const persistDraft = (profile: UserProfile, synced: boolean) => {
+    draftStore?.save({ profile, synced });
+  };
+
   const runSave = async () => {
-    console.log("runSave", {
-      inFlight,
-      savedGeneration,
-      generation,
-      latestSnapshot,
-    });
     if (inFlight) return;
     if (savedGeneration === generation) return;
     if (latestSnapshot === null) return;
@@ -101,6 +104,7 @@ export const createProfileAutosave = ({
       savedGeneration = currentGeneration;
       retryAttempts = 0;
       inFlight = false;
+      persistDraft(snapshot, true);
 
       if (savedGeneration !== generation) {
         await runSave();
@@ -124,6 +128,7 @@ export const createProfileAutosave = ({
       latestSnapshot = snapshot;
       generation += 1;
       retryAttempts = 0;
+      persistDraft(snapshot, false);
       clearRetry();
       clearDebounce();
       debounceTimer = setTimeout(() => {

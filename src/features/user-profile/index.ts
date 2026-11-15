@@ -7,3 +7,4 @@ export {
   type SaveUserProfile,
 } from "./application/save-user-profile";
 export { createHttpUserProfileRepository } from "./infrastructure/http/http-user-profile.repository";
+export { createLocalStorageUserProfileDraftStore } from "./infrastructure/local-storage/local-storage-user-profile-draft.store";

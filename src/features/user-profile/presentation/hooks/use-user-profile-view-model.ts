@@ -10,12 +10,14 @@ import { validateUserProfile } from "../../domain/rules/validate-user-profile";
 
 export type UseUserProfileViewModelParams = {
   autosave: Pick<ProfileAutosave, "schedule">;
+  initialProfile?: UserProfile;
 };
 
 export const useUserProfileViewModel = ({
   autosave,
+  initialProfile = INITIAL_USER_PROFILE,
 }: UseUserProfileViewModelParams) => {
-  const [values, setValues] = useState<UserProfile>(INITIAL_USER_PROFILE);
+  const [values, setValues] = useState<UserProfile>(initialProfile);
   const [errors, setErrors] = useState<UserProfileErrors>({});
   const [touched, setTouched] = useState<
     Partial<Record<UserProfileField, boolean>>
