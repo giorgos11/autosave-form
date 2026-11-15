@@ -6,7 +6,7 @@ import type {
 import styles from "./SaveStatus.module.css";
 
 type SaveStatusProps = {
-  autosave: Pick<ProfileAutosave, "subscribe" | "getStatus">;
+  autosave: Pick<ProfileAutosave, "subscribe" | "getStatus" | "retry">;
 };
 
 type Tone = "neutral" | "busy" | "success" | "error";
@@ -27,7 +27,10 @@ const describe = (
         message: `Couldn't save. Retrying (${status.attempt}/${status.maxAttempts})…`,
       };
     case "error":
-      return { tone: "error", message: "Error saving" };
+      return {
+        tone: "error",
+        message: "Couldn't save your latest changes.",
+      };
   }
 };
 
@@ -41,6 +44,15 @@ export const SaveStatus = ({ autosave }: SaveStatusProps) => {
       <p role="status" className={styles.message}>
         {message}
       </p>
+      {status.kind === "error" && (
+        <button
+          type="button"
+          className={styles.retryButton}
+          onClick={autosave.retry}
+        >
+          Retry
+        </button>
+      )}
     </div>
   );
 };

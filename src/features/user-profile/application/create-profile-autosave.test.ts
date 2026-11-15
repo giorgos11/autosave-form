@@ -193,6 +193,26 @@ describe("createProfileAutosave", () => {
     expect(autosave.getStatus()).toEqual({ kind: "error" });
   });
 
+  it("retry() after a terminal error starts a fresh save attempt", async () => {
+    const save = vi
+      .fn<SaveUserProfile>()
+      .mockRejectedValueOnce(nonRetryableError())
+      .mockResolvedValueOnce(undefined);
+
+    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+
+    autosave.schedule(profile({ fullName: "Ada" }));
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+    expect(autosave.getStatus()).toEqual({ kind: "error" });
+
+    autosave.retry();
+    await vi.runAllTimersAsync();
+
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
+  });
+
   it("does not retry non-retryable failures", async () => {
     const save = vi.fn<SaveUserProfile>().mockRejectedValue(nonRetryableError());
     const autosave = createProfileAutosave({ save, debounceMs: 500 });

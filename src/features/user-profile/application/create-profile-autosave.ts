@@ -15,6 +15,7 @@ export type AutosaveStatus =
 
 export type ProfileAutosave = {
   schedule: (snapshot: UserProfile) => void;
+  retry: () => void;
   getStatus: () => AutosaveStatus;
   subscribe: (listener: () => void) => () => void;
   dispose: () => void;
@@ -79,6 +80,12 @@ export const createProfileAutosave = ({
   };
 
   const runSave = async () => {
+    console.log("runSave", {
+      inFlight,
+      savedGeneration,
+      generation,
+      latestSnapshot,
+    });
     if (inFlight) return;
     if (savedGeneration === generation) return;
     if (latestSnapshot === null) return;
@@ -123,6 +130,13 @@ export const createProfileAutosave = ({
         debounceTimer = undefined;
         void runSave();
       }, debounceMs);
+    },
+
+    retry: () => {
+      clearDebounce();
+      clearRetry();
+      retryAttempts = 0;
+      void runSave();
     },
 
     getStatus: () => status,
