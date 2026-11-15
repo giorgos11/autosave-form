@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { INITIAL_USER_PROFILE } from "../domain/constants/initial-user-profile";
+import { SaveUserProfileError } from "../domain/errors/save-user-profile.error";
 import type { UserProfile } from "../domain/entities/user-profile";
 import { createProfileAutosave } from "./create-profile-autosave";
 import type { SaveUserProfile } from "./save-user-profile";
@@ -19,6 +20,18 @@ const createDeferred = () => {
   return { promise, resolve, reject };
 };
 
+const retryableError = () =>
+  new SaveUserProfileError({
+    message: "transient",
+    retryable: true,
+  });
+
+const nonRetryableError = () =>
+  new SaveUserProfileError({
+    message: "bad request",
+    retryable: false,
+  });
+
 describe("createProfileAutosave", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -32,13 +45,13 @@ describe("createProfileAutosave", () => {
     const save = vi.fn<SaveUserProfile>().mockResolvedValue(undefined);
     const autosave = createProfileAutosave({ save, debounceMs: 500 });
 
-    expect(autosave.getStatus()).toBe("idle");
+    expect(autosave.getStatus()).toEqual({ kind: "idle" });
 
     autosave.schedule(profile({ fullName: "Ada" }));
     await vi.advanceTimersByTimeAsync(499);
 
     expect(save).not.toHaveBeenCalled();
-    expect(autosave.getStatus()).toBe("idle");
+    expect(autosave.getStatus()).toEqual({ kind: "idle" });
   });
 
   it("saves the latest snapshot after the debounce and marks status saved", async () => {
@@ -52,7 +65,7 @@ describe("createProfileAutosave", () => {
 
     expect(save).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledWith(snapshot);
-    expect(autosave.getStatus()).toBe("saved");
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
   });
 
   it("resets the debounce and only persists the latest scheduled snapshot", async () => {
@@ -73,7 +86,7 @@ describe("createProfileAutosave", () => {
 
     expect(save).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledWith(second);
-    expect(autosave.getStatus()).toBe("saved");
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
   });
 
   it("exposes saving while a request is in flight", async () => {
@@ -84,12 +97,12 @@ describe("createProfileAutosave", () => {
     autosave.schedule(profile({ fullName: "Ada" }));
     await vi.advanceTimersByTimeAsync(500);
 
-    expect(autosave.getStatus()).toBe("saving");
+    expect(autosave.getStatus()).toEqual({ kind: "saving" });
 
     deferred.resolve();
     await vi.runAllTimersAsync();
 
-    expect(autosave.getStatus()).toBe("saved");
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
   });
 
   it("coalesces edits made while a save is in flight into one follow-up save", async () => {
@@ -106,12 +119,11 @@ describe("createProfileAutosave", () => {
     await vi.advanceTimersByTimeAsync(500);
 
     expect(save).toHaveBeenCalledTimes(1);
-    expect(autosave.getStatus()).toBe("saving");
+    expect(autosave.getStatus()).toEqual({ kind: "saving" });
 
     autosave.schedule(duringFlight);
     await vi.advanceTimersByTimeAsync(500);
 
-    // Still only the first request; the debounced wake-up is ignored while in flight.
     expect(save).toHaveBeenCalledTimes(1);
 
     firstSave.resolve();
@@ -119,26 +131,113 @@ describe("createProfileAutosave", () => {
 
     expect(save).toHaveBeenCalledTimes(2);
     expect(save).toHaveBeenLastCalledWith(duringFlight);
-    expect(autosave.getStatus()).toBe("saved");
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
   });
 
-  it("marks status error when save fails", async () => {
+  it("retries retryable failures with exponential backoff then succeeds", async () => {
     const save = vi
       .fn<SaveUserProfile>()
-      .mockRejectedValue(new Error("network down"));
+      .mockRejectedValueOnce(retryableError())
+      .mockRejectedValueOnce(retryableError())
+      .mockResolvedValueOnce(undefined);
+
+    const autosave = createProfileAutosave({
+      save,
+      debounceMs: 500,
+      maxRetries: 3,
+      retryBaseDelayMs: 1000,
+    });
+
+    autosave.schedule(profile({ fullName: "Ada" }));
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(autosave.getStatus()).toEqual({
+      kind: "retrying",
+      attempt: 1,
+      maxAttempts: 3,
+    });
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(autosave.getStatus()).toEqual({
+      kind: "retrying",
+      attempt: 2,
+      maxAttempts: 3,
+    });
+
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.runAllTimersAsync();
+
+    expect(save).toHaveBeenCalledTimes(3);
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
+  });
+
+  it("stops retrying after maxRetries and marks error", async () => {
+    const save = vi.fn<SaveUserProfile>().mockRejectedValue(retryableError());
+    const autosave = createProfileAutosave({
+      save,
+      debounceMs: 500,
+      maxRetries: 3,
+      retryBaseDelayMs: 1000,
+    });
+
+    autosave.schedule(profile({ fullName: "Ada" }));
+    await vi.advanceTimersByTimeAsync(500); // attempt 1 fails → retry 1
+    await vi.advanceTimersByTimeAsync(1000); // attempt 2 fails → retry 2
+    await vi.advanceTimersByTimeAsync(2000); // attempt 3 fails → retry 3
+    await vi.advanceTimersByTimeAsync(4000); // attempt 4 fails → error
+    await vi.runAllTimersAsync();
+
+    expect(save).toHaveBeenCalledTimes(4);
+    expect(autosave.getStatus()).toEqual({ kind: "error" });
+  });
+
+  it("does not retry non-retryable failures", async () => {
+    const save = vi.fn<SaveUserProfile>().mockRejectedValue(nonRetryableError());
     const autosave = createProfileAutosave({ save, debounceMs: 500 });
 
     autosave.schedule(profile({ fullName: "Ada" }));
     await vi.advanceTimersByTimeAsync(500);
     await vi.runAllTimersAsync();
 
-    expect(autosave.getStatus()).toBe("error");
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(autosave.getStatus()).toEqual({ kind: "error" });
+  });
+
+  it("cancels a pending retry when the user edits again", async () => {
+    const save = vi
+      .fn<SaveUserProfile>()
+      .mockRejectedValueOnce(retryableError())
+      .mockResolvedValueOnce(undefined);
+
+    const autosave = createProfileAutosave({
+      save,
+      debounceMs: 500,
+      retryBaseDelayMs: 1000,
+    });
+
+    autosave.schedule(profile({ fullName: "A" }));
+    await vi.advanceTimersByTimeAsync(500);
+    expect(autosave.getStatus().kind).toBe("retrying");
+
+    autosave.schedule(profile({ fullName: "Ada" }));
+    // Old retry was at 1000ms; new debounce is 500ms. Before debounce elapses,
+    // the cancelled retry must not have fired another save.
+    await vi.advanceTimersByTimeAsync(499);
+    expect(save).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await vi.runAllTimersAsync();
+
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
   });
 
   it("can schedule again after an error", async () => {
     const save = vi
       .fn<SaveUserProfile>()
-      .mockRejectedValueOnce(new Error("network down"))
+      .mockRejectedValueOnce(nonRetryableError())
       .mockResolvedValueOnce(undefined);
     const autosave = createProfileAutosave({ save, debounceMs: 500 });
     const recovered = profile({ fullName: "Ada" });
@@ -146,7 +245,7 @@ describe("createProfileAutosave", () => {
     autosave.schedule(profile({ fullName: "A" }));
     await vi.advanceTimersByTimeAsync(500);
     await vi.runAllTimersAsync();
-    expect(autosave.getStatus()).toBe("error");
+    expect(autosave.getStatus()).toEqual({ kind: "error" });
 
     autosave.schedule(recovered);
     await vi.advanceTimersByTimeAsync(500);
@@ -154,7 +253,7 @@ describe("createProfileAutosave", () => {
 
     expect(save).toHaveBeenCalledTimes(2);
     expect(save).toHaveBeenLastCalledWith(recovered);
-    expect(autosave.getStatus()).toBe("saved");
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
   });
 
   it("notifies subscribers when status changes and stops after unsubscribe", async () => {
@@ -193,34 +292,39 @@ describe("createProfileAutosave", () => {
 
     autosave.schedule(profile({ fullName: "Ada" }));
     await vi.advanceTimersByTimeAsync(500);
-    expect(autosave.getStatus()).toBe("saving");
+    expect(autosave.getStatus()).toEqual({ kind: "saving" });
     expect(listener).toHaveBeenCalledTimes(1);
 
-    // Newer edit while saving — follow-up runSave keeps status at "saving".
     autosave.schedule(profile({ fullName: "Ada Lovelace" }));
     firstSave.resolve();
     await Promise.resolve();
 
-    expect(autosave.getStatus()).toBe("saving");
+    expect(autosave.getStatus()).toEqual({ kind: "saving" });
     expect(listener).toHaveBeenCalledTimes(1);
 
     secondSave.resolve();
     await vi.runAllTimersAsync();
 
-    expect(autosave.getStatus()).toBe("saved");
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
-  it("dispose cancels a pending debounced save", async () => {
-    const save = vi.fn<SaveUserProfile>().mockResolvedValue(undefined);
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+  it("dispose cancels a pending debounced save and retry", async () => {
+    const save = vi.fn<SaveUserProfile>().mockRejectedValue(retryableError());
+    const autosave = createProfileAutosave({
+      save,
+      debounceMs: 500,
+      retryBaseDelayMs: 1000,
+    });
 
     autosave.schedule(profile({ fullName: "Ada" }));
-    autosave.dispose();
     await vi.advanceTimersByTimeAsync(500);
+    expect(autosave.getStatus().kind).toBe("retrying");
+
+    autosave.dispose();
+    await vi.advanceTimersByTimeAsync(1000);
     await vi.runAllTimersAsync();
 
-    expect(save).not.toHaveBeenCalled();
-    expect(autosave.getStatus()).toBe("idle");
+    expect(save).toHaveBeenCalledTimes(1);
   });
 });
