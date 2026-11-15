@@ -7,6 +7,7 @@ import { getMockConfig } from "./mock-config";
 const PROFILE_URL = `${env.apiBaseUrl}${USER_PROFILE_ENDPOINTS.profile}`;
 
 const FAILING_EMAIL_DOMAIN = "@fail.test";
+const CONFLICT_EMAIL_DOMAIN = "@conflict.test";
 
 const FAILURE_RESPONSES = [
   () =>
@@ -27,6 +28,13 @@ export const userProfileHandlers = [
     const { errorRate, latencyMinMs, latencyMaxMs } = getMockConfig();
 
     await delay(randomInt(latencyMinMs, latencyMaxMs));
+
+    if (profile.email.endsWith(CONFLICT_EMAIL_DOMAIN)) {
+      return HttpResponse.json(
+        { message: "Profile was updated elsewhere" },
+        { status: 409 },
+      );
+    }
 
     if (
       profile.email.endsWith(FAILING_EMAIL_DOMAIN) ||

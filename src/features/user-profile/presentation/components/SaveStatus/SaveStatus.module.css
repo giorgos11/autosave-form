@@ -50,3 +50,18 @@
 .message {
   margin: 0;
 }
+
+.retryButton {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.retryButton:hover {
+  background: color-mix(in srgb, currentColor 8%, var(--bg));
+}

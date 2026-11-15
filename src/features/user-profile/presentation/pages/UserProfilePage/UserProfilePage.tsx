@@ -8,7 +8,7 @@ import { useUserProfileViewModel } from "../../hooks/use-user-profile-view-model
 import styles from "./UserProfilePage.module.css";
 
 export const UserProfilePage = () => {
-  const autosave = useProfileAutosave();
+  const { autosave, initialProfile } = useProfileAutosave();
   const {
     values,
     handleTextChange,
@@ -17,7 +17,7 @@ export const UserProfilePage = () => {
     handleSubmit,
     getVisibleError,
     updateSkills,
-  } = useUserProfileViewModel({ autosave });
+  } = useUserProfileViewModel({ autosave, initialProfile });
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
