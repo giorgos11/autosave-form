@@ -1,5 +1,6 @@
 import { COUNTRIES } from "@/features/user-profile/domain/constants/countries";
 import { BIO_MAX } from "@/features/user-profile/domain/constants/validation";
+import { AutosaveActiveBadge } from "../../components/AutosaveActiveBadge/AutosaveActiveBadge";
 import { FormField } from "../../components/FormField/FormField";
 import { SaveStatus } from "../../components/SaveStatus/SaveStatus";
 import { SkillsList } from "../../components/SkillsList/SkillsList";
@@ -155,6 +156,8 @@ export const UserProfilePage = () => {
       </div>
 
       <SkillsList skills={values.skills} onSkillsChange={updateSkills} />
+
+      <AutosaveActiveBadge />
     </form>
   );
 };
