@@ -41,9 +41,9 @@ export const SkillsList = ({ skills, onSkillsChange }: SkillsListProps) => {
   };
 
   return (
-    <section className={styles.skills}>
+    <section className={styles.skills} aria-labelledby="skills-heading">
       <header className={styles.header}>
-        <h2>Skills</h2>
+        <h2 id="skills-heading">Skills</h2>
         <p>Add skills and set their order.</p>
       </header>
 

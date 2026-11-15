@@ -24,20 +24,29 @@ export const FormField = ({
   error,
   children,
 }: FormFieldProps) => {
+  const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
+  const hasHint = hint !== undefined;
   const hasError = error !== undefined;
+  const describedBy = [hasHint ? hintId : null, hasError ? errorId : null]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div className={styles.field}>
       <label htmlFor={id}>
         {label}
         {required && <span aria-hidden="true">*</span>}
-        {hint !== undefined && <span className={styles.hint}>{hint}</span>}
+        {hasHint && (
+          <span id={hintId} className={styles.hint}>
+            {hint}
+          </span>
+        )}
       </label>
       {children({
         id,
         "aria-invalid": hasError,
-        "aria-describedby": hasError ? errorId : undefined,
+        "aria-describedby": describedBy || undefined,
       })}
       {hasError && (
         <p id={errorId} className={styles.error} role="alert">
