@@ -6,7 +6,6 @@ import { getMockConfig } from "./mock-config";
 
 const PROFILE_URL = `${env.apiBaseUrl}${USER_PROFILE_ENDPOINTS.profile}`;
 
-/** Deterministic failure trigger, independent of the random error rate. */
 const FAILING_EMAIL_DOMAIN = "@fail.test";
 
 const FAILURE_RESPONSES = [
