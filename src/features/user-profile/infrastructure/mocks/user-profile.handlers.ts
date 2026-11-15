@@ -7,7 +7,6 @@ import { getMockConfig } from "./mock-config";
 const PROFILE_URL = `${env.apiBaseUrl}${USER_PROFILE_ENDPOINTS.profile}`;
 
 const FAILING_EMAIL_DOMAIN = "@fail.test";
-/** Deterministic conflict (409) — not a transient failure. */
 const CONFLICT_EMAIL_DOMAIN = "@conflict.test";
 
 const FAILURE_RESPONSES = [
