@@ -1,6 +1,5 @@
 import { COUNTRIES } from "@/features/user-profile/domain/constants/countries";
 import { BIO_MAX } from "@/features/user-profile/domain/constants/validation";
-import { AutosaveActiveBadge } from "../../components/AutosaveActiveBadge/AutosaveActiveBadge";
 import { FormField } from "../../components/FormField/FormField";
 import { SaveStatus } from "../../components/SaveStatus/SaveStatus";
 import { SkillsList } from "../../components/SkillsList/SkillsList";
@@ -23,141 +22,169 @@ export const UserProfilePage = () => {
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
       <header className={styles.header}>
-        <h1>User profile</h1>
-        <p>Fill in your details below.</p>
-        <SaveStatus autosave={autosave} />
+        <div className={styles.titleRow}>
+          <h1>Profile &amp; account</h1>
+          <SaveStatus autosave={autosave} />
+        </div>
+        <p>Update your details below. Changes save automatically.</p>
       </header>
 
-      <FormField
-        id="fullName"
-        label="Full name"
-        required
-        error={getVisibleError("fullName")}
+      <section
+        className={styles.panel}
+        aria-labelledby="personal-information-heading"
       >
-        {(controlProps) => (
-          <input
-            {...controlProps}
-            name="fullName"
-            type="text"
-            autoComplete="name"
-            value={values.fullName}
-            onChange={handleTextChange}
-            onBlur={() => handleBlur("fullName")}
-          />
-        )}
-      </FormField>
+        <header className={styles.panelHeader}>
+          <h2 id="personal-information-heading">Personal information</h2>
+          <p>Name, contact details, and location.</p>
+        </header>
 
-      <FormField
-        id="email"
-        label="Email"
-        required
-        error={getVisibleError("email")}
-      >
-        {(controlProps) => (
-          <input
-            {...controlProps}
-            name="email"
-            type="email"
-            autoComplete="email"
-            value={values.email}
-            onChange={handleTextChange}
-            onBlur={() => handleBlur("email")}
-          />
-        )}
-      </FormField>
-
-      <FormField id="phone" label="Phone" error={getVisibleError("phone")}>
-        {(controlProps) => (
-          <input
-            {...controlProps}
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            placeholder="+1 555 123 4567"
-            value={values.phone}
-            onChange={handleTextChange}
-            onBlur={() => handleBlur("phone")}
-          />
-        )}
-      </FormField>
-
-      <FormField
-        id="country"
-        label="Country"
-        required
-        error={getVisibleError("country")}
-      >
-        {(controlProps) => (
-          <select
-            {...controlProps}
-            name="country"
-            value={values.country}
-            onChange={handleTextChange}
-            onBlur={() => handleBlur("country")}
+        <div className={styles.panelBody}>
+          <FormField
+            id="fullName"
+            label="Full name"
+            required
+            error={getVisibleError("fullName")}
           >
-            <option value="">Select a country</option>
-            {COUNTRIES.map((country) => (
-              <option key={country} value={country}>
-                {country}
-              </option>
-            ))}
-          </select>
-        )}
-      </FormField>
+            {(controlProps) => (
+              <input
+                {...controlProps}
+                name="fullName"
+                type="text"
+                autoComplete="name"
+                value={values.fullName}
+                onChange={handleTextChange}
+                onBlur={() => handleBlur("fullName")}
+              />
+            )}
+          </FormField>
 
-      <FormField
-        id="bio"
-        label="Bio"
-        hint={`${values.bio.length}/${BIO_MAX}`}
-        error={getVisibleError("bio")}
+          <FormField
+            id="email"
+            label="Email"
+            required
+            error={getVisibleError("email")}
+          >
+            {(controlProps) => (
+              <input
+                {...controlProps}
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={values.email}
+                onChange={handleTextChange}
+                onBlur={() => handleBlur("email")}
+              />
+            )}
+          </FormField>
+
+          <FormField id="phone" label="Phone" error={getVisibleError("phone")}>
+            {(controlProps) => (
+              <input
+                {...controlProps}
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                placeholder="+1 555 123 4567"
+                value={values.phone}
+                onChange={handleTextChange}
+                onBlur={() => handleBlur("phone")}
+              />
+            )}
+          </FormField>
+
+          <FormField
+            id="country"
+            label="Country"
+            required
+            error={getVisibleError("country")}
+          >
+            {(controlProps) => (
+              <select
+                {...controlProps}
+                name="country"
+                value={values.country}
+                onChange={handleTextChange}
+                onBlur={() => handleBlur("country")}
+              >
+                <option value="">Select a country</option>
+                {COUNTRIES.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+            )}
+          </FormField>
+        </div>
+      </section>
+
+      <section
+        className={styles.panel}
+        aria-labelledby="profile-preferences-heading"
       >
-        {(controlProps) => (
-          <textarea
-            {...controlProps}
-            name="bio"
-            rows={4}
-            maxLength={BIO_MAX}
-            value={values.bio}
-            onChange={handleTextChange}
-            onBlur={() => handleBlur("bio")}
-          />
-        )}
-      </FormField>
+        <header className={styles.panelHeader}>
+          <h2 id="profile-preferences-heading">Profile &amp; preferences</h2>
+          <p>Bio, birthday, and newsletter preference.</p>
+        </header>
 
-      <FormField
-        id="dateOfBirth"
-        label="Date of birth"
-        required
-        error={getVisibleError("dateOfBirth")}
-      >
-        {(controlProps) => (
-          <input
-            {...controlProps}
-            name="dateOfBirth"
-            type="date"
-            value={values.dateOfBirth}
-            onChange={handleTextChange}
-            onBlur={() => handleBlur("dateOfBirth")}
-          />
-        )}
-      </FormField>
+        <div className={styles.panelBody}>
+          <FormField
+            id="bio"
+            label="Bio"
+            hint={`${values.bio.length}/${BIO_MAX}`}
+            error={getVisibleError("bio")}
+          >
+            {(controlProps) => (
+              <textarea
+                {...controlProps}
+                name="bio"
+                rows={4}
+                maxLength={BIO_MAX}
+                value={values.bio}
+                onChange={handleTextChange}
+                onBlur={() => handleBlur("bio")}
+              />
+            )}
+          </FormField>
 
-      <div className={styles.checkboxField}>
-        <label htmlFor="newsletter">
-          <input
-            id="newsletter"
-            name="newsletter"
-            type="checkbox"
-            checked={values.newsletter}
-            onChange={handleCheckboxChange}
-          />
-          Subscribe to newsletter
-        </label>
+          <FormField
+            id="dateOfBirth"
+            label="Date of birth"
+            required
+            error={getVisibleError("dateOfBirth")}
+          >
+            {(controlProps) => (
+              <input
+                {...controlProps}
+                name="dateOfBirth"
+                type="date"
+                value={values.dateOfBirth}
+                onChange={handleTextChange}
+                onBlur={() => handleBlur("dateOfBirth")}
+              />
+            )}
+          </FormField>
+
+          <div className={styles.preferenceRow}>
+            <div className={styles.preferenceCopy}>
+              <label htmlFor="newsletter">Newsletter</label>
+              <p>Receive occasional product updates.</p>
+            </div>
+            <input
+              id="newsletter"
+              className={styles.toggle}
+              name="newsletter"
+              type="checkbox"
+              checked={values.newsletter}
+              onChange={handleCheckboxChange}
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.panel}>
+        <SkillsList skills={values.skills} onSkillsChange={updateSkills} />
       </div>
-
-      <SkillsList skills={values.skills} onSkillsChange={updateSkills} />
-
-      <AutosaveActiveBadge />
     </form>
   );
 };

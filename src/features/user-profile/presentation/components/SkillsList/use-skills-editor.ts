@@ -1,6 +1,7 @@
 import type { Skill } from "@/features/user-profile/domain/entities/skill";
 import {
   createSkill,
+  insertSkillAfter,
   moveSkill,
   removeSkill,
   updateSkillName,
@@ -15,8 +16,16 @@ export type UseSkillsEditorParams = {
 };
 
 export const useSkillsEditor = ({ updateSkills }: UseSkillsEditorParams) => {
-  const add = () => {
-    updateSkills((skills) => [...skills, createSkill()]);
+  const add = (): string => {
+    const skill = createSkill();
+    updateSkills((skills) => [...skills, skill]);
+    return skill.id;
+  };
+
+  const insertAfter = (afterId: string): string => {
+    const skill = createSkill();
+    updateSkills((skills) => insertSkillAfter({ skills, afterId, skill }).skills);
+    return skill.id;
   };
 
   const remove = (id: string) => {
@@ -53,5 +62,5 @@ export const useSkillsEditor = ({ updateSkills }: UseSkillsEditorParams) => {
     });
   };
 
-  return { add, remove, rename, moveUp, moveDown, reorder };
+  return { add, insertAfter, remove, rename, moveUp, moveDown, reorder };
 };
