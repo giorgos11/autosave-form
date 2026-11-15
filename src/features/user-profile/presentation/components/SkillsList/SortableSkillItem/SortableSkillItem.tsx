@@ -29,13 +29,14 @@ export const SortableSkillItem = ({
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     transition,
     isDragging,
   } = useSortable({ id: skill.id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
   };
 
@@ -46,6 +47,7 @@ export const SortableSkillItem = ({
   return (
     <li ref={setNodeRef} style={style} className={liClassName}>
       <button
+        ref={setActivatorNodeRef}
         type="button"
         className={styles.dragHandle}
         aria-label={`Drag skill ${position}`}

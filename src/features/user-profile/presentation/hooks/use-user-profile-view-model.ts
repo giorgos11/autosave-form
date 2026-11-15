@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
+import type { ProfileAutosave } from "../../application/create-profile-autosave";
 import { INITIAL_USER_PROFILE } from "../../domain/constants/initial-user-profile";
 import type {
   UserProfile,
@@ -6,33 +7,40 @@ import type {
   UserProfileField,
 } from "../../domain/entities/user-profile";
 import { validateUserProfile } from "../../domain/rules/validate-user-profile";
-export const useUserProfileViewModel = () => {
+
+export type UseUserProfileViewModelParams = {
+  autosave: Pick<ProfileAutosave, "schedule">;
+};
+
+export const useUserProfileViewModel = ({
+  autosave,
+}: UseUserProfileViewModelParams) => {
   const [values, setValues] = useState<UserProfile>(INITIAL_USER_PROFILE);
   const [errors, setErrors] = useState<UserProfileErrors>({});
   const [touched, setTouched] = useState<
     Partial<Record<UserProfileField, boolean>>
   >({});
 
+  const commit = (next: UserProfile) => {
+    setValues(next);
+    autosave.schedule(next);
+  };
+
   const updateField = <K extends UserProfileField>(
     field: K,
     value: UserProfile[K],
   ) => {
-    setValues((prev) => {
-      const next = { ...prev, [field]: value };
-      if (touched[field]) {
-        setErrors(validateUserProfile({ values: next }));
-      }
-      return next;
-    });
+    const next = { ...values, [field]: value };
+    commit(next);
+    if (touched[field]) {
+      setErrors(validateUserProfile({ values: next }));
+    }
   };
 
   const updateSkills = (
     getNextSkills: (skills: UserProfile["skills"]) => UserProfile["skills"],
   ) => {
-    setValues((prev) => ({
-      ...prev,
-      skills: getNextSkills(prev.skills),
-    }));
+    commit({ ...values, skills: getNextSkills(values.skills) });
   };
 
   const handleTextChange = (
@@ -57,18 +65,17 @@ export const useUserProfileViewModel = () => {
     event.preventDefault();
   };
 
-  const showError = (field: UserProfileField) => {
-    return Boolean(touched[field] && errors[field]);
+  const getVisibleError = (field: UserProfileField) => {
+    return touched[field] ? errors[field] : undefined;
   };
 
   return {
     values,
-    errors,
     handleTextChange,
     handleCheckboxChange,
     handleBlur,
     handleSubmit,
-    showError,
+    getVisibleError,
     updateSkills,
   };
 };

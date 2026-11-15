@@ -1,4 +1,4 @@
-import { isOlderThan } from "@/shared/lib/is-older-than";
+import { isAtLeastAge } from "@/shared/lib/is-at-least-age";
 import {
   BIO_MAX,
   EMAIL_PATTERN,
@@ -10,10 +10,12 @@ import type { UserProfile, UserProfileErrors } from "../entities/user-profile";
 
 export type ValidateUserProfileParams = {
   values: UserProfile;
+  now?: Date;
 };
 
 export const validateUserProfile = ({
   values,
+  now = new Date(),
 }: ValidateUserProfileParams): UserProfileErrors => {
   const errors: UserProfileErrors = {};
 
@@ -43,7 +45,9 @@ export const validateUserProfile = ({
 
   if (!values.dateOfBirth) {
     errors.dateOfBirth = "Date of birth is required";
-  } else if (!isOlderThan({ dateOfBirth: values.dateOfBirth, age: MIN_AGE })) {
+  } else if (
+    !isAtLeastAge({ dateOfBirth: values.dateOfBirth, age: MIN_AGE, now })
+  ) {
     errors.dateOfBirth = `You must be at least ${MIN_AGE} years old`;
   }
 

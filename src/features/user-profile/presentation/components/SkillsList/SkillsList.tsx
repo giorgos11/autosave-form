@@ -14,6 +14,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import styles from "./SkillsList.module.css";
+import { createSkillsAnnouncements } from "./skills-announcements";
 import { SortableSkillItem } from "./SortableSkillItem/SortableSkillItem";
 import { useSkillsEditor, type UpdateSkills } from "./use-skills-editor";
 
@@ -53,6 +54,7 @@ export const SkillsList = ({ skills, onSkillsChange }: SkillsListProps) => {
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
+          accessibility={{ announcements: createSkillsAnnouncements(skills) }}
         >
           <SortableContext
             items={skills.map((skill) => skill.id)}
