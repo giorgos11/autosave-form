@@ -1,7 +1,7 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.25rem;
   min-width: 0;
 }
 
@@ -85,7 +85,9 @@
 
 .error {
   margin: 0;
-  font-size: 0.82rem;
+  min-height: 0.95rem;
+  font-size: 0.75rem;
+  line-height: 0.95rem;
   color: var(--danger);
   overflow-wrap: anywhere;
 }

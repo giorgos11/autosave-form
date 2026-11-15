@@ -48,11 +48,14 @@ export const FormField = ({
         "aria-invalid": hasError,
         "aria-describedby": describedBy || undefined,
       })}
-      {hasError && (
-        <p id={errorId} className={styles.error} role="alert">
-          {error}
-        </p>
-      )}
+      <p
+        id={errorId}
+        className={styles.error}
+        role={hasError ? "alert" : undefined}
+        aria-hidden={hasError ? undefined : true}
+      >
+        {error ?? ""}
+      </p>
     </div>
   );
 };
