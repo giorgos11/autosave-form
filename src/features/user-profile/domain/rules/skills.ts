@@ -61,3 +61,24 @@ export const updateSkillName = ({
 }: UpdateSkillNameParams): readonly Skill[] => {
   return skills.map((skill) => (skill.id === id ? { ...skill, name } : skill));
 };
+
+export type InsertSkillAfterParams = {
+  skills: readonly Skill[];
+  afterId: string;
+  skill?: Skill;
+};
+
+export const insertSkillAfter = ({
+  skills,
+  afterId,
+  skill = createSkill(),
+}: InsertSkillAfterParams): { skills: readonly Skill[]; inserted: Skill } => {
+  const index = skills.findIndex((item) => item.id === afterId);
+  if (index === -1) {
+    return { skills: [...skills, skill], inserted: skill };
+  }
+
+  const next = [...skills];
+  next.splice(index + 1, 0, skill);
+  return { skills: next, inserted: skill };
+};

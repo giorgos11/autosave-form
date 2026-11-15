@@ -16,21 +16,14 @@ const describe = (
 ): { tone: Tone; message: string } => {
   switch (status.kind) {
     case "idle":
-      return { tone: "neutral", message: "Changes are saved automatically." };
+      return { tone: "neutral", message: "Autosave on" };
     case "saving":
       return { tone: "busy", message: "Saving…" };
     case "saved":
       return { tone: "success", message: "Saved" };
     case "retrying":
-      return {
-        tone: "error",
-        message: `Couldn't save. Retrying (${status.attempt}/${status.maxAttempts})…`,
-      };
     case "error":
-      return {
-        tone: "error",
-        message: "Couldn't save your latest changes.",
-      };
+      return { tone: "error", message: "Error saving" };
   }
 };
 
@@ -39,11 +32,16 @@ export const SaveStatus = ({ autosave }: SaveStatusProps) => {
   const { tone, message } = describe(status);
 
   return (
-    <div className={styles.saveStatus} data-tone={tone}>
-      <span className={styles.indicator} aria-hidden="true" />
-      <p role="status" className={styles.message}>
-        {message}
-      </p>
+    <div className={styles.cluster}>
+      <div className={styles.saveStatus} data-tone={tone}>
+        <span className={styles.indicator} aria-hidden="true" />
+        <p role="status" className={styles.message}>
+          {message}
+          {status.kind === "retrying"
+            ? ` ${status.attempt}/${status.maxAttempts}`
+            : null}
+        </p>
+      </div>
       {status.kind === "error" && (
         <button
           type="button"

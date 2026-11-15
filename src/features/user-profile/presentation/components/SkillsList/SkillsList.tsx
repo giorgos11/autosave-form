@@ -13,6 +13,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useState } from "react";
 import styles from "./SkillsList.module.css";
 import { createSkillsAnnouncements } from "./skills-announcements";
 import { SortableSkillItem } from "./SortableSkillItem/SortableSkillItem";
@@ -24,9 +25,15 @@ type SkillsListProps = {
 };
 
 export const SkillsList = ({ skills, onSkillsChange }: SkillsListProps) => {
-  const { add, remove, rename, moveUp, moveDown, reorder } = useSkillsEditor({
-    updateSkills: onSkillsChange,
-  });
+  const { add, insertAfter, remove, rename, moveUp, moveDown, reorder } =
+    useSkillsEditor({
+      updateSkills: onSkillsChange,
+    });
+  const [pendingFocusId, setPendingFocusId] = useState<string | null>(null);
+
+  const focusNewSkill = (id: string) => {
+    setPendingFocusId(id);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -41,9 +48,9 @@ export const SkillsList = ({ skills, onSkillsChange }: SkillsListProps) => {
   };
 
   return (
-    <section className={styles.skills}>
+    <section className={styles.skills} aria-labelledby="skills-heading">
       <header className={styles.header}>
-        <h2>Skills</h2>
+        <h2 id="skills-heading">Skills</h2>
         <p>Add skills and set their order.</p>
       </header>
 
@@ -68,7 +75,10 @@ export const SkillsList = ({ skills, onSkillsChange }: SkillsListProps) => {
                   position={index + 1}
                   isFirst={index === 0}
                   isLast={index === skills.length - 1}
+                  shouldFocus={skill.id === pendingFocusId}
                   onNameChange={(name) => rename(skill.id, name)}
+                  onInsertAfter={() => focusNewSkill(insertAfter(skill.id))}
+                  onFocused={() => setPendingFocusId(null)}
                   onMoveUp={() => moveUp(index)}
                   onMoveDown={() => moveDown(index)}
                   onRemove={() => remove(skill.id)}
@@ -79,7 +89,11 @@ export const SkillsList = ({ skills, onSkillsChange }: SkillsListProps) => {
         </DndContext>
       )}
 
-      <button type="button" className={styles.addButton} onClick={add}>
+      <button
+        type="button"
+        className={styles.addButton}
+        onClick={() => focusNewSkill(add())}
+      >
         Add skill
       </button>
     </section>

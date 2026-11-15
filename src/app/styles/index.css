@@ -1,61 +1,80 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --accent: #aa3bff;
-  --radius: 6px;
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --text: #5c6570;
+  --text-h: #12161c;
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --border: #d8dee6;
+  --accent: #6d5efc;
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  --danger: #dc2626;
+  --success: #159a4a;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 2px rgb(16 24 40 / 4%), 0 8px 24px rgb(16 24 40 / 6%);
+  --page-gutter: clamp(1rem, 3vw, 1.5rem);
+  --content-max: 36rem;
 
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
+  --sans: "Manrope", "Segoe UI", sans-serif;
+  --heading: "Manrope", "Segoe UI", sans-serif;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
+  font: 16px/150% var(--sans);
+  letter-spacing: 0.01em;
   color-scheme: light dark;
   color: var(--text);
-  background: var(--bg);
+  background:
+    radial-gradient(
+      1200px 500px at 50% -10%,
+      color-mix(in srgb, var(--accent) 12%, transparent),
+      transparent 60%
+    ),
+    var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --accent: #c084fc;
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+    --text: #9aa3b2;
+    --text-h: #f3f5f8;
+    --bg: #0f1218;
+    --surface: #171b24;
+    --border: #2a3140;
+    --accent: #8b7cff;
+    --accent-soft: color-mix(in srgb, var(--accent) 16%, var(--surface));
+    --danger: #f87171;
+    --success: #34d399;
+    --shadow: 0 1px 2px rgb(0 0 0 / 35%), 0 12px 32px rgb(0 0 0 / 35%);
   }
 }
 
+html,
+body {
+  margin: 0;
+  width: 100%;
+  overflow-x: clip;
+}
+
 #root {
-  width: min(100%, 1126px);
-  margin: 0 auto;
+  width: 100%;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
 }
 
 h1,
 h2 {
   font-family: var(--heading);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-h);
+  letter-spacing: -0.02em;
 }
 
 p {

@@ -1,29 +1,34 @@
 .item {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.5rem;
-  background: var(--bg);
+  gap: 0.35rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--bg) 40%, var(--surface));
+  min-width: 0;
 }
 
 .itemDragging {
   z-index: 1;
-  opacity: 0.9;
+  opacity: 0.95;
   box-shadow: var(--shadow);
-  border-radius: var(--radius);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
 }
 
 .dragHandle,
 .actionButton {
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--surface);
   font: inherit;
   font-size: 0.85rem;
 }
 
 .dragHandle {
   flex-shrink: 0;
-  padding: 0.4rem 0.45rem;
+  padding: 0.45rem 0.5rem;
   color: var(--text);
   line-height: 1;
   cursor: grab;
@@ -35,13 +40,13 @@
 }
 
 .nameInput {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   box-sizing: border-box;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
+  padding: 0.55rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
   color: var(--text-h);
   font: inherit;
 }
@@ -49,12 +54,15 @@
 .nameInput:focus {
   outline: none;
   border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .actions {
   display: flex;
+  flex-wrap: nowrap;
   gap: 0.25rem;
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 .actionButton {
@@ -70,4 +78,44 @@
 .actionButton:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.removeIcon {
+  display: none;
+}
+
+@media (max-width: 30rem) {
+  .item {
+    gap: 0.25rem;
+    padding: 0.25rem;
+  }
+
+  .dragHandle {
+    padding: 0.4rem 0.4rem;
+  }
+
+  .nameInput {
+    padding: 0.45rem 0.55rem;
+  }
+
+  .actionButton {
+    padding: 0.35rem 0.45rem;
+    font-size: 0.8rem;
+  }
+
+  .removeLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .removeIcon {
+    display: inline;
+  }
 }

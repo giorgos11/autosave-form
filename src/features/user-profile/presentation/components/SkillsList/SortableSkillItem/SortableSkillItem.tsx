@@ -2,6 +2,7 @@ import { SKILL_NAME_MAX } from "@/features/user-profile/domain/constants/validat
 import type { Skill } from "@/features/user-profile/domain/entities/skill";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useEffect, useRef, type KeyboardEvent } from "react";
 import styles from "./SortableSkillItem.module.css";
 
 type SortableSkillItemProps = {
@@ -9,7 +10,10 @@ type SortableSkillItemProps = {
   position: number;
   isFirst: boolean;
   isLast: boolean;
+  shouldFocus?: boolean;
   onNameChange: (name: string) => void;
+  onInsertAfter: () => void;
+  onFocused?: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
@@ -20,11 +24,15 @@ export const SortableSkillItem = ({
   position,
   isFirst,
   isLast,
+  shouldFocus = false,
   onNameChange,
+  onInsertAfter,
+  onFocused,
   onMoveUp,
   onMoveDown,
   onRemove,
 }: SortableSkillItemProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
   const {
     attributes,
     listeners,
@@ -35,6 +43,12 @@ export const SortableSkillItem = ({
     isDragging,
   } = useSortable({ id: skill.id });
 
+  useEffect(() => {
+    if (!shouldFocus) return;
+    inputRef.current?.focus();
+    onFocused?.();
+  }, [shouldFocus]); // eslint-disable-line react-hooks/exhaustive-deps -- focus once when requested
+
   const style = {
     transform: CSS.Translate.toString(transform),
     transition,
@@ -43,6 +57,12 @@ export const SortableSkillItem = ({
   const liClassName = [styles.item, isDragging && styles.itemDragging]
     .filter(Boolean)
     .join(" ");
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    onInsertAfter();
+  };
 
   return (
     <li ref={setNodeRef} style={style} className={liClassName}>
@@ -57,6 +77,7 @@ export const SortableSkillItem = ({
         <span aria-hidden="true">⋮⋮</span>
       </button>
       <input
+        ref={inputRef}
         type="text"
         className={styles.nameInput}
         value={skill.name}
@@ -64,6 +85,7 @@ export const SortableSkillItem = ({
         placeholder="Skill name"
         aria-label={`Skill ${position}`}
         onChange={(event) => onNameChange(event.target.value)}
+        onKeyDown={handleKeyDown}
       />
       <div className={styles.actions}>
         <button
@@ -90,7 +112,10 @@ export const SortableSkillItem = ({
           aria-label={`Remove skill ${position}`}
           onClick={onRemove}
         >
-          Remove
+          <span className={styles.removeLabel}>Remove</span>
+          <span className={styles.removeIcon} aria-hidden="true">
+            ×
+          </span>
         </button>
       </div>
     </li>
