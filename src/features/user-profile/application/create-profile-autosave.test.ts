@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { INITIAL_USER_PROFILE } from "../domain/constants/initial-user-profile";
-import { SaveUserProfileError } from "../domain/errors/save-user-profile.error";
 import type { UserProfile } from "../domain/entities/user-profile";
+import { SaveUserProfileError } from "../domain/errors/save-user-profile.error";
 import { createProfileAutosave } from "./create-profile-autosave";
 import type { SaveUserProfile } from "./save-user-profile";
 
@@ -214,7 +214,9 @@ describe("createProfileAutosave", () => {
   });
 
   it("does not retry non-retryable failures", async () => {
-    const save = vi.fn<SaveUserProfile>().mockRejectedValue(nonRetryableError());
+    const save = vi
+      .fn<SaveUserProfile>()
+      .mockRejectedValue(nonRetryableError());
     const autosave = createProfileAutosave({ save, debounceMs: 500 });
 
     autosave.schedule(profile({ fullName: "Ada" }));
@@ -242,8 +244,6 @@ describe("createProfileAutosave", () => {
     expect(autosave.getStatus().kind).toBe("retrying");
 
     autosave.schedule(profile({ fullName: "Ada" }));
-    // Old retry was at 1000ms; new debounce is 500ms. Before debounce elapses,
-    // the cancelled retry must not have fired another save.
     await vi.advanceTimersByTimeAsync(499);
     expect(save).toHaveBeenCalledTimes(1);
 
