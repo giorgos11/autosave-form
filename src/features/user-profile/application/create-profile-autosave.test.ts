@@ -74,12 +74,28 @@ describe("createProfileAutosave", () => {
 
     expect(autosave.getStatus()).toEqual({ kind: "idle" });
     expect(autosave.getRevision()).toBe(0);
+    expect(autosave.hasUnsavedChanges()).toBe(false);
 
     autosave.schedule(profile({ fullName: "Ada" }));
     await vi.advanceTimersByTimeAsync(499);
 
     expect(save).not.toHaveBeenCalled();
     expect(autosave.getStatus()).toEqual({ kind: "idle" });
+    expect(autosave.hasUnsavedChanges()).toBe(true);
+  });
+
+  it("clears unsaved changes after a successful save", async () => {
+    const save = vi.fn<SaveUserProfile>().mockImplementation(saveOk);
+    const autosave = createAutosave({ save, debounceMs: 500 });
+
+    autosave.schedule(profile({ fullName: "Ada" }));
+    expect(autosave.hasUnsavedChanges()).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
+    expect(autosave.hasUnsavedChanges()).toBe(false);
   });
 
   it("saves with the current revision and advances it on success", async () => {

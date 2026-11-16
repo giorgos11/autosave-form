@@ -73,7 +73,9 @@ JSON Patch would help if the form grew large or saves became chatty: send only c
 
 **Local-first form + debounced autosave.** Field state updates immediately. Saves fire ~500 ms
 after typing stops. Only one request runs at a time; edits during a save are coalesced and the
-latest snapshot is sent when the in-flight request finishes (avoids out-of-order status).
+latest snapshot is sent when the in-flight request finishes (avoids out-of-order status). Closing
+or reloading the tab while a change is still unsaved triggers the browser’s native leave warning
+(`beforeunload`).
 
 **Invalid drafts still save.** Validation is progressive (show on blur, live while touched) and
 does not block autosave — losing half-filled input is worse than storing an incomplete profile.

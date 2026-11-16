@@ -26,6 +26,7 @@ export type ProfileAutosave = {
   useTheirs: () => Promise<UserProfile>;
   getStatus: () => AutosaveStatus;
   getRevision: () => number;
+  hasUnsavedChanges: () => boolean;
   subscribe: (listener: () => void) => () => void;
   dispose: () => void;
 };
@@ -186,10 +187,8 @@ export const createProfileAutosave = ({
       try {
         const document = await get();
         revision = document.revision;
-        // Leave conflict so runSave may proceed; a new 409 re-enters conflict.
         setStatus({ kind: "saving" });
         inFlight = false;
-        // Ensure a save runs even if generation was already marked dirty.
         if (savedGeneration === generation) {
           generation += 1;
         }
@@ -221,6 +220,12 @@ export const createProfileAutosave = ({
     getStatus: () => status,
 
     getRevision: () => revision,
+
+    hasUnsavedChanges: () =>
+      debounceTimer !== undefined ||
+      retryTimer !== undefined ||
+      inFlight ||
+      savedGeneration !== generation,
 
     subscribe: (listener) => {
       listeners.add(listener);

@@ -6,6 +6,7 @@ import { FormField } from "../../components/FormField/FormField";
 import { SaveStatus } from "../../components/SaveStatus/SaveStatus";
 import { SkillsList } from "../../components/SkillsList/SkillsList";
 import { useProfileAutosave } from "../../hooks/use-profile-autosave";
+import { useUnsavedChangesWarning } from "../../hooks/use-unsaved-changes-warning";
 import { useUserProfileViewModel } from "../../hooks/use-user-profile-view-model";
 import styles from "./UserProfilePage.module.css";
 
@@ -21,6 +22,8 @@ export const UserProfilePage = () => {
     updateSkills,
     replaceProfile,
   } = useUserProfileViewModel({ autosave, initialProfile });
+
+  useUnsavedChangesWarning(autosave);
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
