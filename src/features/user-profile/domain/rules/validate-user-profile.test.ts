@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { INITIAL_USER_PROFILE } from "../constants/initial-user-profile";
-import { BIO_MAX, MIN_AGE, MIN_FULL_NAME_LENGTH } from "../constants/validation";
+import {
+  BIO_MAX,
+  MIN_AGE,
+  MIN_FULL_NAME_LENGTH,
+} from "../constants/validation";
 import type { UserProfile } from "../entities/user-profile";
 import { validateUserProfile } from "./validate-user-profile";
 
 const NOW = new Date("2026-06-15T12:00:00.000Z");
 
-const validProfile = (
-  overrides: Partial<UserProfile> = {},
-): UserProfile => ({
+const validProfile = (overrides: Partial<UserProfile> = {}): UserProfile => ({
   ...INITIAL_USER_PROFILE,
   fullName: "Ada Lovelace",
   email: "ada@example.com",

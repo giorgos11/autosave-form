@@ -16,9 +16,7 @@ type SaveStatusProps = {
 
 type Tone = "neutral" | "busy" | "success" | "error";
 
-const describe = (
-  status: AutosaveStatus,
-): { tone: Tone; message: string } => {
+const describe = (status: AutosaveStatus): { tone: Tone; message: string } => {
   switch (status.kind) {
     case "idle":
       return { tone: "neutral", message: "Autosave on" };

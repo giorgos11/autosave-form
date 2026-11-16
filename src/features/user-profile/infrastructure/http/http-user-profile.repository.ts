@@ -18,9 +18,7 @@ const toSaveUserProfileError = (error: unknown): SaveUserProfileError => {
   if (isHttpError(error)) {
     const conflict = error.status === 409;
     return new SaveUserProfileError({
-      message: conflict
-        ? "Profile was updated elsewhere"
-        : error.message,
+      message: conflict ? "Profile was updated elsewhere" : error.message,
       retryable: !conflict && isRetryableStatus(error.status),
       conflict,
       cause: error,

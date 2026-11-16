@@ -24,7 +24,9 @@ export const useSkillsEditor = ({ updateSkills }: UseSkillsEditorParams) => {
 
   const insertAfter = (afterId: string): string => {
     const skill = createSkill();
-    updateSkills((skills) => insertSkillAfter({ skills, afterId, skill }).skills);
+    updateSkills(
+      (skills) => insertSkillAfter({ skills, afterId, skill }).skills,
+    );
     return skill.id;
   };
 
