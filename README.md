@@ -55,9 +55,13 @@ React so it can be unit-tested with fake timers; `SaveStatus` subscribes with
 ## Key design decisions
 
 **Full-snapshot `PUT`, not PATCH.** The payload is small; a full replace is idempotent and makes
-skill reordering trivial (array order is the order). Diff patches would need ordering rules for
-list moves. The body is `{ revision, profile }`; the server increments `revision` on success
-(starts at `0`). A mismatched revision returns `409`.
+skill reordering trivial (array order is the order). The body is `{ revision, profile }`; the
+server increments `revision` on success (starts at `0`). A mismatched revision returns `409`.
+
+JSON Patch would help if the form grew large or saves became chatty: send only changed paths
+(same resource, `PATCH` + revision — not a separate service). Skills are the awkward part —
+`/skills/1` is index-based and breaks under reorder/concurrency, so a practical patch would
+`replace` whole `/skills` when the list changes (or use id-aware ops). Kept as a next step.
 
 **Local-first form + debounced autosave.** Field state updates immediately. Saves fire ~500 ms
 after typing stops. Only one request runs at a time; edits during a save are coalesced and the
@@ -100,9 +104,11 @@ sensor, with screen-reader drag announcements.
 
 1. **Flush lifecycle** — immediate save on blur, submit, `visibilitychange`, and unload
    (`keepalive` fetch).
-2. **Skip no-op PUTs** — if the snapshot equals the last confirmed one, do not hit the network.
-3. ~~**Versioned save protocol**~~ — done (`revision` + conflict Keep mine / Use theirs).
-4. **Load profile from the API on boot** — then localStorage only for *unsynced* drafts.
-5. **Broader tests** — HTTP error mapping, skills domain rules; optional MSW integration tests.
-6. **Production hardening** — auth headers, timeouts, clearer conflict copy, draft encryption or
+2. **Skip no-op saves** — if the snapshot equals the last confirmed one, do not hit the network.
+3. **JSON Patch** — when the document is large: diff against last confirmed snapshot, `PATCH` with
+   revision; replace `/skills` as a unit (avoid fragile `/skills/n` indexes).
+4. ~~**Versioned save protocol**~~ — done (`revision` + conflict Keep mine / Use theirs).
+5. **Load profile from the API on boot** — then localStorage only for *unsynced* drafts.
+6. **Broader tests** — HTTP error mapping, skills domain rules; optional MSW integration tests.
+7. **Production hardening** — auth headers, timeouts, clearer conflict copy, draft encryption or
    TTL if PII retention matters.
