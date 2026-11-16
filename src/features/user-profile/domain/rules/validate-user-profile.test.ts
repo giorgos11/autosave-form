@@ -63,6 +63,33 @@ describe("validateUserProfile", () => {
     );
   });
 
+  it("rejects a full name that includes numbers", () => {
+    const errors = validateUserProfile({
+      values: validProfile({ fullName: "Alex123" }),
+      now: NOW,
+    });
+
+    expect(errors.fullName).toBe("Full name can't include numbers");
+  });
+
+  it("accepts unicode letters, hyphens and apostrophes in a full name", () => {
+    const errors = validateUserProfile({
+      values: validProfile({ fullName: "Γιώργος O'Brien-Μαρία" }),
+      now: NOW,
+    });
+
+    expect(errors.fullName).toBeUndefined();
+  });
+
+  it("rejects a full name made only of punctuation", () => {
+    const errors = validateUserProfile({
+      values: validProfile({ fullName: "---" }),
+      now: NOW,
+    });
+
+    expect(errors.fullName).toBe("Enter a valid full name");
+  });
+
   it("rejects an invalid email", () => {
     const errors = validateUserProfile({
       values: validProfile({ email: "not-an-email" }),
@@ -70,6 +97,24 @@ describe("validateUserProfile", () => {
     });
 
     expect(errors.email).toBe("Enter a valid email address");
+  });
+
+  it("rejects emails with non-ASCII characters", () => {
+    const errors = validateUserProfile({
+      values: validProfile({ email: "user@example.ψομ" }),
+      now: NOW,
+    });
+
+    expect(errors.email).toBe("Enter a valid email address");
+  });
+
+  it("accepts a typical ASCII email", () => {
+    const errors = validateUserProfile({
+      values: validProfile({ email: "ada.lovelace+dev@example.co.uk" }),
+      now: NOW,
+    });
+
+    expect(errors.email).toBeUndefined();
   });
 
   it("allows an empty phone but rejects an invalid one", () => {
