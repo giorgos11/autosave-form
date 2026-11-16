@@ -71,6 +71,14 @@
   margin: 0;
 }
 
+.conflictActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
 .retryButton {
   padding: 0;
   border: none;
@@ -82,6 +90,7 @@
   text-decoration: underline;
   text-underline-offset: 0.15em;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .retryButton:hover {

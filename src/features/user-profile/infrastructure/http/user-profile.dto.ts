@@ -13,3 +13,17 @@ export type UserProfileDto = {
   newsletter: boolean;
   skills: SkillDto[];
 };
+
+export type UserProfileDocumentDto = {
+  revision: number;
+  profile: UserProfileDto;
+};
+
+export type SaveUserProfileRequestDto = {
+  revision: number;
+  profile: UserProfileDto;
+};
+
+export type SaveUserProfileResponseDto = {
+  revision: number;
+};

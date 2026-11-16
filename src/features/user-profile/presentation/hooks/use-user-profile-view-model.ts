@@ -71,6 +71,12 @@ export const useUserProfileViewModel = ({
     return touched[field] ? errors[field] : undefined;
   };
 
+  const replaceProfile = (profile: UserProfile) => {
+    setValues(profile);
+    setErrors({});
+    setTouched({});
+  };
+
   return {
     values,
     handleTextChange,
@@ -79,5 +85,6 @@ export const useUserProfileViewModel = ({
     handleSubmit,
     getVisibleError,
     updateSkills,
+    replaceProfile,
   };
 };

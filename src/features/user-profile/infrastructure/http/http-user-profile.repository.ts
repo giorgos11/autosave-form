@@ -2,8 +2,12 @@ import type { HttpClient } from "@/shared/api/http-client";
 import { isHttpError } from "@/shared/api/http-error";
 import { SaveUserProfileError } from "../../domain/errors/save-user-profile.error";
 import type { UserProfileRepository } from "../../domain/ports/user-profile.repository";
+import type {
+  SaveUserProfileResponseDto,
+  UserProfileDocumentDto,
+} from "./user-profile.dto";
 import { USER_PROFILE_ENDPOINTS } from "./user-profile.endpoints";
-import { toUserProfileDto } from "./user-profile.mapper";
+import { toUserProfile, toUserProfileDto } from "./user-profile.mapper";
 
 const RETRYABLE_CLIENT_STATUSES = new Set([408, 429]);
 
@@ -12,9 +16,13 @@ const isRetryableStatus = (status: number) =>
 
 const toSaveUserProfileError = (error: unknown): SaveUserProfileError => {
   if (isHttpError(error)) {
+    const conflict = error.status === 409;
     return new SaveUserProfileError({
-      message: error.message,
-      retryable: isRetryableStatus(error.status),
+      message: conflict
+        ? "Profile was updated elsewhere"
+        : error.message,
+      retryable: !conflict && isRetryableStatus(error.status),
+      conflict,
       cause: error,
     });
   }
@@ -41,12 +49,26 @@ export type CreateHttpUserProfileRepositoryParams = {
 export const createHttpUserProfileRepository = ({
   httpClient,
 }: CreateHttpUserProfileRepositoryParams): UserProfileRepository => ({
-  save: async (profile) => {
+  get: async () => {
+    const dto = await httpClient.get<UserProfileDocumentDto>(
+      USER_PROFILE_ENDPOINTS.profile,
+    );
+    return {
+      revision: dto.revision,
+      profile: toUserProfile(dto.profile),
+    };
+  },
+
+  save: async ({ profile, revision }) => {
     try {
-      await httpClient.put<void>(
+      const response = await httpClient.put<SaveUserProfileResponseDto>(
         USER_PROFILE_ENDPOINTS.profile,
-        toUserProfileDto(profile),
+        {
+          revision,
+          profile: toUserProfileDto(profile),
+        },
       );
+      return { revision: response.revision };
     } catch (error) {
       throw toSaveUserProfileError(error);
     }

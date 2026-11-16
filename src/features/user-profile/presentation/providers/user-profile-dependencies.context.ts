@@ -1,8 +1,10 @@
 import { createContext, useContext } from "react";
+import type { GetUserProfile } from "../../application/get-user-profile";
 import type { SaveUserProfile } from "../../application/save-user-profile";
 import type { UserProfileDraftStore } from "../../domain/ports/user-profile-draft.store";
 
 export type UserProfileDependencies = {
+  get: GetUserProfile;
   save: SaveUserProfile;
   draftStore: UserProfileDraftStore;
 };

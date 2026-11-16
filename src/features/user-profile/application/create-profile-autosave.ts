@@ -1,6 +1,10 @@
 import type { UserProfile } from "../domain/entities/user-profile";
-import { isRetryableSaveError } from "../domain/errors/save-user-profile.error";
+import {
+  isConflictSaveError,
+  isRetryableSaveError,
+} from "../domain/errors/save-user-profile.error";
 import type { UserProfileDraftStore } from "../domain/ports/user-profile-draft.store";
+import type { GetUserProfile } from "./get-user-profile";
 import type { SaveUserProfile } from "./save-user-profile";
 
 export type AutosaveStatus =
@@ -12,20 +16,26 @@ export type AutosaveStatus =
       readonly attempt: number;
       readonly maxAttempts: number;
     }
-  | { readonly kind: "error" };
+  | { readonly kind: "error" }
+  | { readonly kind: "conflict" };
 
 export type ProfileAutosave = {
   schedule: (snapshot: UserProfile) => void;
   retry: () => void;
+  keepMine: () => Promise<void>;
+  useTheirs: () => Promise<UserProfile>;
   getStatus: () => AutosaveStatus;
+  getRevision: () => number;
   subscribe: (listener: () => void) => () => void;
   dispose: () => void;
 };
 
 export type CreateProfileAutosaveParams = {
   save: SaveUserProfile;
+  get: GetUserProfile;
   draftStore?: UserProfileDraftStore;
   initialSnapshot?: UserProfile;
+  initialRevision?: number;
   debounceMs?: number;
   maxRetries?: number;
   retryBaseDelayMs?: number;
@@ -37,8 +47,10 @@ const isSameStatus = (a: AutosaveStatus, b: AutosaveStatus) =>
 
 export const createProfileAutosave = ({
   save,
+  get,
   draftStore,
   initialSnapshot,
+  initialRevision = 0,
   debounceMs = 500,
   maxRetries = 3,
   retryBaseDelayMs = 1000,
@@ -47,6 +59,7 @@ export const createProfileAutosave = ({
 
   let status: AutosaveStatus = { kind: "idle" };
   let latestSnapshot: UserProfile | null = initialSnapshot ?? null;
+  let revision = initialRevision;
   let generation = 0;
   let savedGeneration = 0;
   let retryAttempts = 0;
@@ -89,6 +102,7 @@ export const createProfileAutosave = ({
   };
 
   const runSave = async () => {
+    if (status.kind === "conflict") return;
     if (inFlight) return;
     if (savedGeneration === generation) return;
     if (latestSnapshot === null) return;
@@ -98,9 +112,14 @@ export const createProfileAutosave = ({
 
     const currentGeneration = generation;
     const snapshot = latestSnapshot;
+    const expectedRevision = revision;
 
     try {
-      await save(snapshot);
+      const result = await save({
+        profile: snapshot,
+        revision: expectedRevision,
+      });
+      revision = result.revision;
       savedGeneration = currentGeneration;
       retryAttempts = 0;
       inFlight = false;
@@ -114,6 +133,13 @@ export const createProfileAutosave = ({
       setStatus({ kind: "saved" });
     } catch (error) {
       inFlight = false;
+      clearRetry();
+
+      if (isConflictSaveError(error)) {
+        retryAttempts = 0;
+        setStatus({ kind: "conflict" });
+        return;
+      }
 
       if (isRetryableSaveError(error) && retryAttempts < maxRetries) {
         scheduleRetry();
@@ -127,8 +153,13 @@ export const createProfileAutosave = ({
     schedule: (snapshot) => {
       latestSnapshot = snapshot;
       generation += 1;
-      retryAttempts = 0;
       persistDraft(snapshot, false);
+
+      if (status.kind === "conflict") {
+        return;
+      }
+
+      retryAttempts = 0;
       clearRetry();
       clearDebounce();
       debounceTimer = setTimeout(() => {
@@ -138,13 +169,58 @@ export const createProfileAutosave = ({
     },
 
     retry: () => {
+      if (status.kind === "conflict") return;
       clearDebounce();
       clearRetry();
       retryAttempts = 0;
       void runSave();
     },
 
+    keepMine: async () => {
+      if (status.kind !== "conflict" || latestSnapshot === null) return;
+
+      clearDebounce();
+      clearRetry();
+      retryAttempts = 0;
+
+      try {
+        const document = await get();
+        revision = document.revision;
+        // Leave conflict so runSave may proceed; a new 409 re-enters conflict.
+        setStatus({ kind: "saving" });
+        inFlight = false;
+        // Ensure a save runs even if generation was already marked dirty.
+        if (savedGeneration === generation) {
+          generation += 1;
+        }
+        await runSave();
+      } catch {
+        setStatus({ kind: "conflict" });
+      }
+    },
+
+    useTheirs: async () => {
+      if (status.kind !== "conflict") {
+        throw new Error("useTheirs requires a conflict status");
+      }
+
+      clearDebounce();
+      clearRetry();
+      retryAttempts = 0;
+
+      const document = await get();
+      latestSnapshot = document.profile;
+      revision = document.revision;
+      savedGeneration = generation;
+      inFlight = false;
+      persistDraft(document.profile, true);
+      setStatus({ kind: "saved" });
+      return document.profile;
+    },
+
     getStatus: () => status,
+
+    getRevision: () => revision,
 
     subscribe: (listener) => {
       listeners.add(listener);
