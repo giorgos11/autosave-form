@@ -99,6 +99,7 @@ sensor, with screen-reader drag announcements.
 | Save invalid drafts | Better UX; requires a draft-friendly backend |
 | MSW in production builds | Demo works offline; must be disabled for a real API |
 | No flush-on-blur/unload yet | Last keystrokes can still sit in the debounce window if the tab dies immediately |
+| Meta + `robots.txt` / one-URL sitemap | Share cards and crawl basics for a demo SPA; a sitemap does not create indexable content — real multi-route apps need SSR/prerender |
 
 ## With more time
 

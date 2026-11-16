@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+# Sitemap is emitted at build time with an absolute URL (see scripts/seo-files-plugin.ts).
