@@ -1,6 +1,7 @@
 import { COUNTRIES } from "@/features/user-profile/domain/constants/countries";
 import { phonePlaceholderForCountry } from "@/features/user-profile/domain/constants/country-dial-codes";
 import { BIO_MAX } from "@/features/user-profile/domain/constants/validation";
+import { toLocalIsoDate } from "@/shared/lib/to-local-iso-date";
 import { FormField } from "../../components/FormField/FormField";
 import { SaveStatus } from "../../components/SaveStatus/SaveStatus";
 import { SkillsList } from "../../components/SkillsList/SkillsList";
@@ -161,6 +162,7 @@ export const UserProfilePage = () => {
                 {...controlProps}
                 name="dateOfBirth"
                 type="date"
+                max={toLocalIsoDate()}
                 value={values.dateOfBirth}
                 onChange={handleTextChange}
                 onBlur={() => handleBlur("dateOfBirth")}
