@@ -26,6 +26,8 @@ npm run build     # type-check + production build
 | `npm run format`       | Format with Prettier            |
 | `npm run format:check` | Check formatting (used in CI)   |
 
+CI (GitHub Actions) runs `format:check`, lint, test, and build on `main` and pull requests.
+
 There is no real backend. [MSW](https://mswjs.io) intercepts `GET` / `PUT /api/user-profile` in the
 browser (also enabled in production builds so the deployed demo works). Successful PUTs update an
 in-memory server profile that GET returns — groundwork for conflict reload.
@@ -77,15 +79,19 @@ latest snapshot is sent when the in-flight request finishes (avoids out-of-order
 does not block autosave — losing half-filled input is worse than storing an incomplete profile.
 The backend must treat these as drafts.
 
+**Country before phone + dial-code suggest.** Country is required and sits above phone. Choosing a
+country fills a dial prefix when the phone field is empty (or only holds a previous prefix); it
+does not overwrite a number the user has already typed. **Other** clears a prefix-only value.
+
 **Skills order = array position.** Stable `id`s identify rows; `moveSkill` / drag-and-drop /
 ↑↓ buttons reorder the list. The ordered array is what the server receives.
 
 **Errors classified at the HTTP edge.** The repository maps transport failures to
 `SaveUserProfileError` with a `retryable` flag. Transient failures (`5xx`, `408`, `429`, network)
-get exponential backoff (1s → 2s → 4s); then a manual **Retry**. Non-retryable rejects (e.g.
-generic client errors) fail fast with Retry. **`409` is conflict**: autosave pauses and local
-edits are kept. Resolve with **Keep mine** (GET revision, re-PUT local) or **Use theirs**
-(GET document into the form).
+get exponential backoff (1s → 2s → 4s) across up to 4 attempts (first try included in the
+`1/4`…`3/4` status); then a manual **Retry**. Non-retryable rejects (e.g. generic client errors)
+fail fast with Retry. **`409` is conflict**: autosave pauses and local edits are kept. Resolve
+with **Keep mine** (GET revision, re-PUT local) or **Use theirs** (GET document into the form).
 
 **Drafts in `localStorage`.** Unsynced snapshots survive reload; after a successful save the
 draft is kept as synced so hydrate still works without a GET. Trade-off: drafts can contain PII
@@ -116,6 +122,8 @@ sensor, with screen-reader drag announcements.
    revision; replace `/skills` as a unit (avoid fragile `/skills/n` indexes).
 4. ~~**Versioned save protocol**~~ — done (`revision` + conflict Keep mine / Use theirs).
 5. **Load profile from the API on boot** — then localStorage only for _unsynced_ drafts.
-6. **Broader tests** — HTTP error mapping, skills domain rules; optional MSW integration tests.
+6. **Remaining tests** — HTTP error mapping and skills domain rules; optional MSW integration
+   tests. (Profile validation, dial-code suggest, autosave, draft store, and age helpers are
+   already covered.)
 7. **Production hardening** — auth headers, timeouts, clearer conflict copy, draft encryption or
    TTL if PII retention matters.
