@@ -70,12 +70,14 @@
 }
 
 .actionSlot {
+  --action-line: 1.5rem;
+
   grid-area: actions;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem 0.75rem;
-  min-height: 1.35rem;
+  min-height: var(--action-line);
 }
 
 .conflictActions {
@@ -83,6 +85,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem;
+  min-height: var(--action-line);
 }
 
 .retryButton {
@@ -93,6 +96,8 @@
   font: inherit;
   font-size: 0.78rem;
   font-weight: 600;
+  line-height: var(--action-line);
+  min-height: var(--action-line);
   text-decoration: underline;
   text-underline-offset: 0.15em;
   cursor: pointer;
@@ -113,5 +118,6 @@
   flex: 1 1 12rem;
   font-size: 0.78rem;
   font-weight: 500;
+  line-height: var(--action-line);
   color: var(--danger);
 }
