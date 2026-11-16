@@ -8,6 +8,7 @@
   grid-area: status;
   justify-self: end;
   align-self: start;
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -20,6 +21,54 @@
   font-weight: 500;
   color: var(--text);
   white-space: nowrap;
+}
+
+.saveStatus[data-tooltip] {
+  cursor: help;
+}
+
+.saveStatus[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 2;
+  width: max-content;
+  max-width: min(18rem, 70vw);
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: normal;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.saveStatus[data-tooltip]:hover::after,
+.saveStatus[data-tooltip]:focus::after,
+.saveStatus[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+.saveStatus[data-tooltip]:focus,
+.saveStatus[data-tooltip]:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--danger) 55%, transparent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .saveStatus[data-tooltip]::after {
+    transition: none;
+  }
 }
 
 .saveStatus[data-tone="busy"] {

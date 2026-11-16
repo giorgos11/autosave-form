@@ -16,14 +16,14 @@ type SaveStatusProps = {
 
 type Tone = "neutral" | "busy" | "success" | "error";
 
-const CONFLICT_DETAIL =
-  "Someone else saved while you were editing. Keep yours or load theirs.";
+const CONFLICT_HINT =
+  "Someone else updated the profile. Keep yours or use theirs.";
 
 const USE_THEIRS_ERROR = "Couldn't load the server version. Try again.";
 
 const describe = (
   status: AutosaveStatus,
-): { tone: Tone; message: string; detail?: string } => {
+): { tone: Tone; message: string; hint?: string } => {
   switch (status.kind) {
     case "idle":
       return { tone: "neutral", message: "Autosave on" };
@@ -35,16 +35,17 @@ const describe = (
     case "error":
       return { tone: "error", message: "Error saving" };
     case "conflict":
-      return { tone: "error", message: "Conflict", detail: CONFLICT_DETAIL };
+      return { tone: "error", message: "Conflict", hint: CONFLICT_HINT };
   }
 };
 
 export const SaveStatus = ({ autosave, onUseTheirs }: SaveStatusProps) => {
   const status = useSyncExternalStore(autosave.subscribe, autosave.getStatus);
-  const { tone, message, detail } = describe(status);
+  const { tone, message, hint } = describe(status);
   const [useTheirsError, setUseTheirsError] = useState<string | null>(null);
   const [useTheirsPending, setUseTheirsPending] = useState(false);
-  const showUseTheirsError = status.kind === "conflict" ? useTheirsError : null;
+  const showUseTheirsError =
+    status.kind === "conflict" ? useTheirsError : null;
 
   const handleUseTheirs = async () => {
     if (useTheirsPending) return;
@@ -67,8 +68,9 @@ export const SaveStatus = ({ autosave, onUseTheirs }: SaveStatusProps) => {
       <div
         className={styles.saveStatus}
         data-tone={tone}
-        title={detail}
-        aria-label={detail ? `${message}. ${detail}` : undefined}
+        data-tooltip={hint}
+        tabIndex={hint ? 0 : undefined}
+        aria-label={hint ? `${message}. ${hint}` : undefined}
       >
         <span className={styles.indicator} aria-hidden="true" />
         <p role="status" className={styles.message}>
