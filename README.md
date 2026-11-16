@@ -3,7 +3,7 @@
 A user profile form (personal details + an orderable skills list) that debounces changes to a
 server, recovers from failures, and keeps drafts across reloads.
 
-**Live demo:** https://autosave-form-two.vercel.app/
+**Live demo:** https://www.giorgos11.site/
 
 ![Autosave Form demo — profile fields with Saved status](docs/readme-demo.png)
 
