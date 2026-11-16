@@ -5,6 +5,8 @@ server, recovers from failures, and keeps drafts across reloads.
 
 **Live demo:** https://autosave-form-two.vercel.app/
 
+![Autosave Form demo — profile fields with Saved status](docs/readme-demo.png)
+
 ## How to run
 
 ```bash
