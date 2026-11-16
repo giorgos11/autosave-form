@@ -189,7 +189,7 @@ describe("createProfileAutosave", () => {
     expect(autosave.getStatus()).toEqual({
       kind: "retrying",
       attempt: 1,
-      maxAttempts: 3,
+      maxAttempts: 4,
     });
 
     await vi.advanceTimersByTimeAsync(1000);
@@ -197,7 +197,7 @@ describe("createProfileAutosave", () => {
     expect(autosave.getStatus()).toEqual({
       kind: "retrying",
       attempt: 2,
-      maxAttempts: 3,
+      maxAttempts: 4,
     });
 
     await vi.advanceTimersByTimeAsync(2000);
