@@ -124,13 +124,13 @@ export const createProfileAutosave = ({
       savedGeneration = currentGeneration;
       retryAttempts = 0;
       inFlight = false;
-      persistDraft(snapshot, true);
 
       if (savedGeneration !== generation) {
         await runSave();
         return;
       }
 
+      persistDraft(snapshot, true);
       setStatus({ kind: "saved" });
       return;
     }
@@ -145,13 +145,13 @@ export const createProfileAutosave = ({
       lastSavedSnapshot = snapshot;
       retryAttempts = 0;
       inFlight = false;
-      persistDraft(snapshot, true);
 
       if (savedGeneration !== generation) {
         await runSave();
         return;
       }
 
+      persistDraft(snapshot, true);
       setStatus({ kind: "saved" });
     } catch (error) {
       inFlight = false;

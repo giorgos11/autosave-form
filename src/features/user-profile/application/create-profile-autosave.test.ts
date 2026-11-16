@@ -566,4 +566,60 @@ describe("createProfileAutosave", () => {
       synced: true,
     });
   });
+
+  it("does not overwrite a newer unsynced draft when an older in-flight save succeeds", async () => {
+    const firstSave = createDeferred();
+    const secondSave = createDeferred();
+    const save = vi
+      .fn<SaveUserProfile>()
+      .mockImplementationOnce(() => firstSave.promise)
+      .mockImplementationOnce(() => secondSave.promise);
+    const draftStore = {
+      load: vi.fn(),
+      save: vi.fn(),
+      clear: vi.fn(),
+    };
+    const snapshotA = profile({ fullName: "Ada" });
+    const snapshotB = profile({ fullName: "Ada Lovelace" });
+    const autosave = createAutosave({
+      save,
+      draftStore,
+      debounceMs: 500,
+    });
+
+    autosave.schedule(snapshotA);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(autosave.getStatus()).toEqual({ kind: "saving" });
+
+    autosave.schedule(snapshotB);
+    expect(draftStore.save).toHaveBeenLastCalledWith({
+      profile: snapshotB,
+      synced: false,
+    });
+
+    firstSave.resolve({ revision: 1 });
+    await vi.runAllTimersAsync();
+
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(draftStore.save).not.toHaveBeenCalledWith({
+      profile: snapshotA,
+      synced: true,
+    });
+    expect(draftStore.save).toHaveBeenLastCalledWith({
+      profile: snapshotB,
+      synced: false,
+    });
+    expect(autosave.getStatus()).toEqual({ kind: "saving" });
+
+    secondSave.resolve({ revision: 2 });
+    await vi.runAllTimersAsync();
+
+    expect(draftStore.save).toHaveBeenLastCalledWith({
+      profile: snapshotB,
+      synced: true,
+    });
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
+    expect(autosave.getRevision()).toBe(2);
+  });
 });

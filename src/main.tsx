@@ -4,7 +4,8 @@ import { App } from "./app/App";
 import "./app/styles/index.css";
 
 const enableMocking = async () => {
-  if (import.meta.env.VITE_ENABLE_MOCKS !== "true") return;
+  // Default on until a real API exists; set VITE_ENABLE_MOCKS=false to opt out.
+  if (import.meta.env.VITE_ENABLE_MOCKS === "false") return;
 
   const { network } = await import("virtual:msw");
   const { userProfileHandlers } = await import("@/features/user-profile/mocks");

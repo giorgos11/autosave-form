@@ -1,15 +1,13 @@
-.cluster {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.55rem;
-  flex-shrink: 0;
-  margin-left: auto;
+.wrap {
+  display: contents;
 }
 
 .saveStatus {
   --tone-color: var(--border);
 
+  grid-area: status;
+  justify-self: end;
+  align-self: start;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -71,11 +69,19 @@
   margin: 0;
 }
 
+.actionSlot {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+  min-height: 1.35rem;
+}
+
 .conflictActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
   gap: 0.55rem;
 }
 
@@ -95,4 +101,17 @@
 
 .retryButton:hover {
   color: color-mix(in srgb, var(--danger) 80%, var(--text-h));
+}
+
+.retryButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.conflictError {
+  margin: 0;
+  flex: 1 1 12rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--danger);
 }

@@ -43,8 +43,8 @@ in-memory server profile that GET returns — groundwork for conflict reload.
 | `/?mockLatencyMinMs=1500&mockLatencyMaxMs=3000` | Slow responses                                                                                                                    |
 
 Defaults (`VITE_*` in `.env.example` / your local `.env`): ~20% random errors, 300–800 ms
-latency. Copy `.env.example` → `.env` for local builds. Query params override env without a
-rebuild.
+latency. Mocks stay on when `VITE_ENABLE_MOCKS` is unset; copy `.env.example` → `.env` for
+local defaults. Query params override mock rates without a rebuild.
 
 ## Architecture
 

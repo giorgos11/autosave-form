@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type {
   AutosaveStatus,
   ProfileAutosave,
@@ -18,6 +18,8 @@ type Tone = "neutral" | "busy" | "success" | "error";
 
 const CONFLICT_DETAIL =
   "Someone else saved while you were editing. Keep yours or load theirs.";
+
+const USE_THEIRS_ERROR = "Couldn't load the server version. Try again.";
 
 const describe = (
   status: AutosaveStatus,
@@ -40,14 +42,28 @@ const describe = (
 export const SaveStatus = ({ autosave, onUseTheirs }: SaveStatusProps) => {
   const status = useSyncExternalStore(autosave.subscribe, autosave.getStatus);
   const { tone, message, detail } = describe(status);
+  const [useTheirsError, setUseTheirsError] = useState<string | null>(null);
+  const [useTheirsPending, setUseTheirsPending] = useState(false);
+  const showUseTheirsError = status.kind === "conflict" ? useTheirsError : null;
 
   const handleUseTheirs = async () => {
-    const profile = await autosave.useTheirs();
-    onUseTheirs(profile);
+    if (useTheirsPending) return;
+
+    setUseTheirsPending(true);
+    setUseTheirsError(null);
+
+    try {
+      const profile = await autosave.useTheirs();
+      onUseTheirs(profile);
+    } catch {
+      setUseTheirsError(USE_THEIRS_ERROR);
+    } finally {
+      setUseTheirsPending(false);
+    }
   };
 
   return (
-    <div className={styles.cluster}>
+    <div className={styles.wrap}>
       <div
         className={styles.saveStatus}
         data-tone={tone}
@@ -62,33 +78,49 @@ export const SaveStatus = ({ autosave, onUseTheirs }: SaveStatusProps) => {
             : null}
         </p>
       </div>
-      {status.kind === "error" && (
-        <button
-          type="button"
-          className={styles.retryButton}
-          onClick={autosave.retry}
-        >
-          Retry
-        </button>
-      )}
-      {status.kind === "conflict" && (
-        <div className={styles.conflictActions}>
+
+      <div className={styles.actionSlot}>
+        {status.kind === "error" ? (
           <button
             type="button"
             className={styles.retryButton}
-            onClick={() => void autosave.keepMine()}
+            onClick={autosave.retry}
           >
-            Keep mine
+            Retry
           </button>
-          <button
-            type="button"
-            className={styles.retryButton}
-            onClick={() => void handleUseTheirs()}
-          >
-            Use theirs
-          </button>
-        </div>
-      )}
+        ) : null}
+
+        {status.kind === "conflict" ? (
+          <div className={styles.conflictActions}>
+            <button
+              type="button"
+              className={styles.retryButton}
+              onClick={() => {
+                setUseTheirsError(null);
+                void autosave.keepMine();
+              }}
+              disabled={useTheirsPending}
+            >
+              Keep mine
+            </button>
+            <button
+              type="button"
+              className={styles.retryButton}
+              onClick={() => void handleUseTheirs()}
+              disabled={useTheirsPending}
+              aria-busy={useTheirsPending || undefined}
+            >
+              Use theirs
+            </button>
+          </div>
+        ) : null}
+
+        {showUseTheirsError ? (
+          <p role="alert" className={styles.conflictError}>
+            {showUseTheirsError}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 };

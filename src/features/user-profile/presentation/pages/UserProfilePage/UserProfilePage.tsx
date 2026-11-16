@@ -39,10 +39,8 @@ export const UserProfilePage = () => {
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
       <header className={styles.header}>
-        <div className={styles.titleRow}>
-          <h1>Profile &amp; account</h1>
-          <SaveStatus autosave={autosave} onUseTheirs={replaceProfile} />
-        </div>
+        <h1>Profile &amp; account</h1>
+        <SaveStatus autosave={autosave} onUseTheirs={replaceProfile} />
         <p>Update your details below. Changes save automatically.</p>
       </header>
 
