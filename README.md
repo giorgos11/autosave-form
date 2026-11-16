@@ -73,9 +73,9 @@ JSON Patch would help if the form grew large or saves became chatty: send only c
 
 **Local-first form + debounced autosave.** Field state updates immediately. Saves fire ~500 ms
 after typing stops. Only one request runs at a time; edits during a save are coalesced and the
-latest snapshot is sent when the in-flight request finishes (avoids out-of-order status). Closing
-or reloading the tab while a change is still unsaved triggers the browser’s native leave warning
-(`beforeunload`).
+latest snapshot is sent when the in-flight request finishes (avoids out-of-order status). If the
+snapshot matches the last confirmed save, the network call is skipped. Closing or reloading the
+tab while a change is still unsaved triggers the browser’s native leave warning (`beforeunload`).
 
 **Invalid drafts still save.** Validation is progressive (show on blur, live while touched) and
 does not block autosave — losing half-filled input is worse than storing an incomplete profile.
@@ -119,12 +119,11 @@ sensor, with screen-reader drag announcements.
 
 1. **Flush lifecycle** — immediate save on blur, submit, `visibilitychange`, and unload
    (`keepalive` fetch).
-2. **Skip no-op saves** — if the snapshot equals the last confirmed one, do not hit the network.
-3. **JSON Patch** — when the document is large: diff against last confirmed snapshot, `PATCH` with
+2. **JSON Patch** — when the document is large: diff against last confirmed snapshot, `PATCH` with
    revision; replace `/skills` as a unit (avoid fragile `/skills/n` indexes).
-4. **Load profile from the API on boot** — then localStorage only for _unsynced_ drafts.
-5. **Remaining tests** — HTTP error mapping and skills domain rules; optional MSW integration
+3. **Load profile from the API on boot** — then localStorage only for _unsynced_ drafts.
+4. **Remaining tests** — HTTP error mapping and skills domain rules; optional MSW integration
    tests. (Profile validation, dial-code suggest, autosave, draft store, and age helpers are
    already covered.)
-6. **Production hardening** — auth headers, timeouts, clearer conflict copy, draft encryption or
-   TTL if PII retention matters.
+5. **Production hardening** — auth headers, timeouts, draft encryption or TTL if PII retention
+   matters.

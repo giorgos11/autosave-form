@@ -1,10 +1,13 @@
+import { useEffect, useRef } from "react";
 import { COUNTRIES } from "@/features/user-profile/domain/constants/countries";
 import { phonePlaceholderForCountry } from "@/features/user-profile/domain/constants/country-dial-codes";
 import { BIO_MAX } from "@/features/user-profile/domain/constants/validation";
+import { isEmptyUserProfile } from "@/features/user-profile/domain/rules/is-empty-user-profile";
 import { toLocalIsoDate } from "@/shared/lib/to-local-iso-date";
 import { FormField } from "../../components/FormField/FormField";
 import { SaveStatus } from "../../components/SaveStatus/SaveStatus";
 import { SkillsList } from "../../components/SkillsList/SkillsList";
+import { useAutosaveDocumentTitle } from "../../hooks/use-autosave-document-title";
 import { useProfileAutosave } from "../../hooks/use-profile-autosave";
 import { useUnsavedChangesWarning } from "../../hooks/use-unsaved-changes-warning";
 import { useUserProfileViewModel } from "../../hooks/use-user-profile-view-model";
@@ -22,8 +25,16 @@ export const UserProfilePage = () => {
     updateSkills,
     replaceProfile,
   } = useUserProfileViewModel({ autosave, initialProfile });
+  const fullNameRef = useRef<HTMLInputElement>(null);
 
   useUnsavedChangesWarning(autosave);
+  useAutosaveDocumentTitle(autosave);
+
+  useEffect(() => {
+    if (isEmptyUserProfile(initialProfile)) {
+      fullNameRef.current?.focus();
+    }
+  }, [initialProfile]);
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -54,6 +65,7 @@ export const UserProfilePage = () => {
             {(controlProps) => (
               <input
                 {...controlProps}
+                ref={fullNameRef}
                 name="fullName"
                 type="text"
                 autoComplete="name"

@@ -113,6 +113,27 @@ describe("createProfileAutosave", () => {
     expect(autosave.getStatus()).toEqual({ kind: "saved" });
   });
 
+  it("skips the network when the snapshot matches the last saved profile", async () => {
+    const save = vi.fn<SaveUserProfile>().mockImplementation(saveOk);
+    const autosave = createAutosave({ save, debounceMs: 500 });
+    const snapshot = profile({ fullName: "Ada" });
+
+    autosave.schedule(snapshot);
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+    expect(save).toHaveBeenCalledTimes(1);
+
+    autosave.schedule(profile({ fullName: "Ada Lovelace" }));
+    await vi.advanceTimersByTimeAsync(200);
+    autosave.schedule(snapshot);
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
+    expect(autosave.getRevision()).toBe(1);
+  });
+
   it("resets the debounce and only persists the latest scheduled snapshot", async () => {
     const save = vi.fn<SaveUserProfile>().mockImplementation(saveOk);
     const autosave = createAutosave({ save, debounceMs: 500 });

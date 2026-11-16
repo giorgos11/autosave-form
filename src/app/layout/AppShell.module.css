@@ -59,3 +59,13 @@
   color: var(--text);
   text-align: center;
 }
+
+.footerLink {
+  color: inherit;
+  font-weight: 600;
+  text-underline-offset: 0.15em;
+}
+
+.footerLink:hover {
+  color: var(--text-h);
+}

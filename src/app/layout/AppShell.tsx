@@ -30,7 +30,17 @@ export const AppShell = ({ children }: AppShellProps) => {
       <main className={styles.main}>{children}</main>
 
       <footer className={styles.footer}>
-        <p>Demo profile editor — changes autosave to a mock API.</p>
+        <p>
+          Demo profile editor — changes autosave to a mock API.{" "}
+          <a
+            className={styles.footerLink}
+            href="https://github.com/giorgos11/autosave-form"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub
+          </a>
+        </p>
       </footer>
     </div>
   );

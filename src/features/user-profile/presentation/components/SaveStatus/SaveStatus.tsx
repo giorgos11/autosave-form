@@ -16,7 +16,12 @@ type SaveStatusProps = {
 
 type Tone = "neutral" | "busy" | "success" | "error";
 
-const describe = (status: AutosaveStatus): { tone: Tone; message: string } => {
+const CONFLICT_DETAIL =
+  "Someone else saved while you were editing. Keep yours or load theirs.";
+
+const describe = (
+  status: AutosaveStatus,
+): { tone: Tone; message: string; detail?: string } => {
   switch (status.kind) {
     case "idle":
       return { tone: "neutral", message: "Autosave on" };
@@ -28,13 +33,13 @@ const describe = (status: AutosaveStatus): { tone: Tone; message: string } => {
     case "error":
       return { tone: "error", message: "Error saving" };
     case "conflict":
-      return { tone: "error", message: "Conflict" };
+      return { tone: "error", message: "Conflict", detail: CONFLICT_DETAIL };
   }
 };
 
 export const SaveStatus = ({ autosave, onUseTheirs }: SaveStatusProps) => {
   const status = useSyncExternalStore(autosave.subscribe, autosave.getStatus);
-  const { tone, message } = describe(status);
+  const { tone, message, detail } = describe(status);
 
   const handleUseTheirs = async () => {
     const profile = await autosave.useTheirs();
@@ -43,7 +48,12 @@ export const SaveStatus = ({ autosave, onUseTheirs }: SaveStatusProps) => {
 
   return (
     <div className={styles.cluster}>
-      <div className={styles.saveStatus} data-tone={tone}>
+      <div
+        className={styles.saveStatus}
+        data-tone={tone}
+        title={detail}
+        aria-label={detail ? `${message}. ${detail}` : undefined}
+      >
         <span className={styles.indicator} aria-hidden="true" />
         <p role="status" className={styles.message}>
           {message}

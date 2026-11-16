@@ -4,6 +4,7 @@ import {
   isRetryableSaveError,
 } from "../domain/errors/save-user-profile.error";
 import type { UserProfileDraftStore } from "../domain/ports/user-profile-draft.store";
+import { areUserProfilesEqual } from "../domain/rules/are-user-profiles-equal";
 import type { GetUserProfile } from "./get-user-profile";
 import type { SaveUserProfile } from "./save-user-profile";
 
@@ -60,6 +61,7 @@ export const createProfileAutosave = ({
 
   let status: AutosaveStatus = { kind: "idle" };
   let latestSnapshot: UserProfile | null = initialSnapshot ?? null;
+  let lastSavedSnapshot: UserProfile | null = null;
   let revision = initialRevision;
   let generation = 0;
   let savedGeneration = 0;
@@ -115,6 +117,24 @@ export const createProfileAutosave = ({
     const snapshot = latestSnapshot;
     const expectedRevision = revision;
 
+    if (
+      lastSavedSnapshot &&
+      areUserProfilesEqual(lastSavedSnapshot, snapshot)
+    ) {
+      savedGeneration = currentGeneration;
+      retryAttempts = 0;
+      inFlight = false;
+      persistDraft(snapshot, true);
+
+      if (savedGeneration !== generation) {
+        await runSave();
+        return;
+      }
+
+      setStatus({ kind: "saved" });
+      return;
+    }
+
     try {
       const result = await save({
         profile: snapshot,
@@ -122,6 +142,7 @@ export const createProfileAutosave = ({
       });
       revision = result.revision;
       savedGeneration = currentGeneration;
+      lastSavedSnapshot = snapshot;
       retryAttempts = 0;
       inFlight = false;
       persistDraft(snapshot, true);
@@ -209,6 +230,7 @@ export const createProfileAutosave = ({
 
       const document = await get();
       latestSnapshot = document.profile;
+      lastSavedSnapshot = document.profile;
       revision = document.revision;
       savedGeneration = generation;
       inFlight = false;
