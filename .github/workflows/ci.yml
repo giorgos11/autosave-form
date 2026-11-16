@@ -13,8 +13,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
+          # MSW 3 requires Node >= 22.12; lockfile is generated with npm 11.
           node-version: 22
           cache: npm
+
+      - name: Match local npm (lockfile from npm 11)
+        run: npm install -g npm@11
 
       - name: Install
         run: npm ci
