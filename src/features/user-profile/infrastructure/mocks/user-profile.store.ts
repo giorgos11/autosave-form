@@ -1,16 +1,24 @@
 import { INITIAL_USER_PROFILE } from "../../domain/constants/initial-user-profile";
-import type { UserProfileDto } from "../http/user-profile.dto";
+import type { UserProfileDocumentDto } from "../http/user-profile.dto";
 import { toUserProfileDto } from "../http/user-profile.mapper";
 
-/** In-memory server profile for MSW — source of truth for GET / PUT in the demo. */
-let storedProfile: UserProfileDto = toUserProfileDto(INITIAL_USER_PROFILE);
-
-export const getStoredUserProfile = (): UserProfileDto => storedProfile;
-
-export const setStoredUserProfile = (profile: UserProfileDto): void => {
-  storedProfile = profile;
+let storedDocument: UserProfileDocumentDto = {
+  revision: 0,
+  profile: toUserProfileDto(INITIAL_USER_PROFILE),
 };
 
-export const resetStoredUserProfile = (): void => {
-  storedProfile = toUserProfileDto(INITIAL_USER_PROFILE);
+export const getStoredUserProfileDocument = (): UserProfileDocumentDto =>
+  storedDocument;
+
+export const setStoredUserProfileDocument = (
+  document: UserProfileDocumentDto,
+): void => {
+  storedDocument = document;
+};
+
+export const resetStoredUserProfileDocument = (): void => {
+  storedDocument = {
+    revision: 0,
+    profile: toUserProfileDto(INITIAL_USER_PROFILE),
+  };
 };

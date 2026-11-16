@@ -18,6 +18,7 @@ export type ProfileAutosave = {
   schedule: (snapshot: UserProfile) => void;
   retry: () => void;
   getStatus: () => AutosaveStatus;
+  getRevision: () => number;
   subscribe: (listener: () => void) => () => void;
   dispose: () => void;
 };
@@ -26,6 +27,7 @@ export type CreateProfileAutosaveParams = {
   save: SaveUserProfile;
   draftStore?: UserProfileDraftStore;
   initialSnapshot?: UserProfile;
+  initialRevision?: number;
   debounceMs?: number;
   maxRetries?: number;
   retryBaseDelayMs?: number;
@@ -39,6 +41,7 @@ export const createProfileAutosave = ({
   save,
   draftStore,
   initialSnapshot,
+  initialRevision = 0,
   debounceMs = 500,
   maxRetries = 3,
   retryBaseDelayMs = 1000,
@@ -47,6 +50,7 @@ export const createProfileAutosave = ({
 
   let status: AutosaveStatus = { kind: "idle" };
   let latestSnapshot: UserProfile | null = initialSnapshot ?? null;
+  let revision = initialRevision;
   let generation = 0;
   let savedGeneration = 0;
   let retryAttempts = 0;
@@ -98,9 +102,14 @@ export const createProfileAutosave = ({
 
     const currentGeneration = generation;
     const snapshot = latestSnapshot;
+    const expectedRevision = revision;
 
     try {
-      await save(snapshot);
+      const result = await save({
+        profile: snapshot,
+        revision: expectedRevision,
+      });
+      revision = result.revision;
       savedGeneration = currentGeneration;
       retryAttempts = 0;
       inFlight = false;
@@ -145,6 +154,8 @@ export const createProfileAutosave = ({
     },
 
     getStatus: () => status,
+
+    getRevision: () => revision,
 
     subscribe: (listener) => {
       listeners.add(listener);

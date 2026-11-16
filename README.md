@@ -56,7 +56,8 @@ React so it can be unit-tested with fake timers; `SaveStatus` subscribes with
 
 **Full-snapshot `PUT`, not PATCH.** The payload is small; a full replace is idempotent and makes
 skill reordering trivial (array order is the order). Diff patches would need ordering rules for
-list moves.
+list moves. The body is `{ revision, profile }`; the server increments `revision` on success
+(starts at `0`). A mismatched revision returns `409`.
 
 **Local-first form + debounced autosave.** Field state updates immediately. Saves fire ~500 ms
 after typing stops. Only one request runs at a time; edits during a save are coalesced and the
@@ -87,7 +88,7 @@ sensor, with screen-reader drag announcements.
 | Choice | Trade-off |
 | ------ | --------- |
 | GET exists; form still hydrates from draft | `get` is wired for later conflict/load; UI still prefers `localStorage` on boot |
-| No wire `revision` yet | Client generation is enough with single-flight; true multi-writer conflicts need server versions |
+| Document `revision` on wire; UI still treats 409 as generic error | Autosave tracks revision; Step 3 adds first-class conflict resolve |
 | `localStorage` vs `sessionStorage` | Survives tab close; shared across tabs; stores PII locally |
 | Save invalid drafts | Better UX; requires a draft-friendly backend |
 | MSW in production builds | Demo works offline; must be disabled for a real API |
