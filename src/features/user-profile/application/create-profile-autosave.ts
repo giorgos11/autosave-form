@@ -89,7 +89,7 @@ export const createProfileAutosave = ({
     setStatus({
       kind: "retrying",
       attempt: retryAttempts,
-      maxAttempts: maxRetries,
+      maxAttempts: maxRetries + 1,
     });
     retryTimer = setTimeout(() => {
       retryTimer = undefined;

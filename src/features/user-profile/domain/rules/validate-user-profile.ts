@@ -2,6 +2,7 @@ import { isAtLeastAge } from "@/shared/lib/is-at-least-age";
 import {
   BIO_MAX,
   EMAIL_PATTERN,
+  FULL_NAME_PATTERN,
   MIN_AGE,
   MIN_FULL_NAME_LENGTH,
   PHONE_PATTERN,
@@ -19,10 +20,15 @@ export const validateUserProfile = ({
 }: ValidateUserProfileParams): UserProfileErrors => {
   const errors: UserProfileErrors = {};
 
-  if (!values.fullName.trim()) {
+  const fullName = values.fullName.trim();
+  if (!fullName) {
     errors.fullName = "Full name is required";
-  } else if (values.fullName.trim().length < MIN_FULL_NAME_LENGTH) {
+  } else if (fullName.length < MIN_FULL_NAME_LENGTH) {
     errors.fullName = `Full name must be at least ${MIN_FULL_NAME_LENGTH} characters`;
+  } else if (/\d/.test(fullName)) {
+    errors.fullName = "Full name can't include numbers";
+  } else if (!FULL_NAME_PATTERN.test(fullName)) {
+    errors.fullName = "Enter a valid full name";
   }
 
   if (!values.email.trim()) {
