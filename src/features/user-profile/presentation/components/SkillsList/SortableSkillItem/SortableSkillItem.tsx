@@ -59,9 +59,24 @@ export const SortableSkillItem = ({
     .join(" ");
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-    event.preventDefault();
-    onInsertAfter();
+    if (event.key === "Enter") {
+      event.preventDefault();
+      onInsertAfter();
+      return;
+    }
+
+    if (event.key === "ArrowUp" && !isFirst) {
+      event.preventDefault();
+      onMoveUp();
+      queueMicrotask(() => inputRef.current?.focus());
+      return;
+    }
+
+    if (event.key === "ArrowDown" && !isLast) {
+      event.preventDefault();
+      onMoveDown();
+      queueMicrotask(() => inputRef.current?.focus());
+    }
   };
 
   return (
