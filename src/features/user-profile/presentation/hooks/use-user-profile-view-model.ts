@@ -1,11 +1,13 @@
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
 import type { ProfileAutosave } from "../../application/create-profile-autosave";
+import type { Country } from "../../domain/constants/countries";
 import { INITIAL_USER_PROFILE } from "../../domain/constants/initial-user-profile";
 import type {
   UserProfile,
   UserProfileErrors,
   UserProfileField,
 } from "../../domain/entities/user-profile";
+import { suggestPhoneForCountry } from "../../domain/rules/suggest-phone-for-country";
 import { validateUserProfile } from "../../domain/rules/validate-user-profile";
 
 export type UseUserProfileViewModelParams = {
@@ -51,6 +53,25 @@ export const useUserProfileViewModel = ({
     >,
   ) => {
     const { name, value } = event.target;
+
+    if (name === "country") {
+      const nextCountry = value as Country | "";
+      const next = {
+        ...values,
+        country: nextCountry,
+        phone: suggestPhoneForCountry({
+          phone: values.phone,
+          previousCountry: values.country,
+          nextCountry,
+        }),
+      };
+      commit(next);
+      if (touched.country || touched.phone) {
+        setErrors(validateUserProfile({ values: next }));
+      }
+      return;
+    }
+
     updateField(name as UserProfileField, value as never);
   };
 

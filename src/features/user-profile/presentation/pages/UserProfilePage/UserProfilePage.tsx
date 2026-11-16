@@ -1,4 +1,5 @@
 import { COUNTRIES } from "@/features/user-profile/domain/constants/countries";
+import { phonePlaceholderForCountry } from "@/features/user-profile/domain/constants/country-dial-codes";
 import { BIO_MAX } from "@/features/user-profile/domain/constants/validation";
 import { FormField } from "../../components/FormField/FormField";
 import { SaveStatus } from "../../components/SaveStatus/SaveStatus";
@@ -78,21 +79,6 @@ export const UserProfilePage = () => {
             )}
           </FormField>
 
-          <FormField id="phone" label="Phone" error={getVisibleError("phone")}>
-            {(controlProps) => (
-              <input
-                {...controlProps}
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="+1 555 123 4567"
-                value={values.phone}
-                onChange={handleTextChange}
-                onBlur={() => handleBlur("phone")}
-              />
-            )}
-          </FormField>
-
           <FormField
             id="country"
             label="Country"
@@ -103,6 +89,7 @@ export const UserProfilePage = () => {
               <select
                 {...controlProps}
                 name="country"
+                autoComplete="country-name"
                 value={values.country}
                 onChange={handleTextChange}
                 onBlur={() => handleBlur("country")}
@@ -114,6 +101,21 @@ export const UserProfilePage = () => {
                   </option>
                 ))}
               </select>
+            )}
+          </FormField>
+
+          <FormField id="phone" label="Phone" error={getVisibleError("phone")}>
+            {(controlProps) => (
+              <input
+                {...controlProps}
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                placeholder={phonePlaceholderForCountry(values.country)}
+                value={values.phone}
+                onChange={handleTextChange}
+                onBlur={() => handleBlur("phone")}
+              />
             )}
           </FormField>
         </div>
