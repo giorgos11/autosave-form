@@ -4,7 +4,10 @@ import type { SaveUserProfileRequestDto } from "../http/user-profile.dto";
 import { USER_PROFILE_ENDPOINTS } from "../http/user-profile.endpoints";
 import { getMockConfig } from "./mock-config";
 import {
+  consumeConflictRace,
   getStoredUserProfileDocument,
+  isConflictRaceArmed,
+  rearmConflictRace,
   setStoredUserProfileDocument,
 } from "./user-profile.store";
 
@@ -37,13 +40,22 @@ export const userProfileHandlers = [
     const body = (await request.json()) as SaveUserProfileRequestDto;
     const { errorRate, latencyMinMs, latencyMaxMs } = getMockConfig();
     const current = getStoredUserProfileDocument();
+    const usesConflictEmail = body.profile.email.endsWith(
+      CONFLICT_EMAIL_DOMAIN,
+    );
 
     await delay(randomInt(latencyMinMs, latencyMaxMs));
 
+    if (!usesConflictEmail) {
+      rearmConflictRace();
+    }
+
     if (
-      body.profile.email.endsWith(CONFLICT_EMAIL_DOMAIN) &&
-      body.revision === current.revision
+      usesConflictEmail &&
+      body.revision === current.revision &&
+      isConflictRaceArmed()
     ) {
+      consumeConflictRace();
       setStoredUserProfileDocument({
         revision: current.revision + 1,
         profile: {

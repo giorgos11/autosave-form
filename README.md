@@ -29,7 +29,7 @@ in-memory server profile that GET returns — groundwork for conflict reload.
 | Trigger | Effect |
 | ------- | ------ |
 | Email ending in `@fail.test` | Deterministic transient failure (`500` / `503` / network) |
-| Email ending in `@conflict.test` | Concurrent-write demo: `409` + server revision bump; rebase with **Keep mine** / **Use theirs** |
+| Email ending in `@conflict.test` | One-shot concurrent race (`409` + revision bump); **Keep mine** / **Use theirs** then work. Change email away and back to re-arm. |
 | `/?mockErrorRate=0` | Never fail randomly |
 | `/?mockErrorRate=1` | Always fail randomly |
 | `/?mockLatencyMinMs=1500&mockLatencyMaxMs=3000` | Slow responses |

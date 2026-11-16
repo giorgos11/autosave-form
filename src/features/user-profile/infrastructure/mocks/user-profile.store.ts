@@ -7,6 +7,8 @@ let storedDocument: UserProfileDocumentDto = {
   profile: toUserProfileDto(INITIAL_USER_PROFILE),
 };
 
+let conflictRaceArmed = true;
+
 export const getStoredUserProfileDocument = (): UserProfileDocumentDto =>
   storedDocument;
 
@@ -16,9 +18,20 @@ export const setStoredUserProfileDocument = (
   storedDocument = document;
 };
 
+export const isConflictRaceArmed = (): boolean => conflictRaceArmed;
+
+export const consumeConflictRace = (): void => {
+  conflictRaceArmed = false;
+};
+
+export const rearmConflictRace = (): void => {
+  conflictRaceArmed = true;
+};
+
 export const resetStoredUserProfileDocument = (): void => {
   storedDocument = {
     revision: 0,
     profile: toUserProfileDto(INITIAL_USER_PROFILE),
   };
+  conflictRaceArmed = true;
 };
