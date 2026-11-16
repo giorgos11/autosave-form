@@ -2,11 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Plugin } from "vite";
 
-/**
- * Emits robots.txt + a single-URL sitemap into the build output.
- * Absolute URLs are required for the Sitemap directive; resolve from
- * VITE_SITE_URL, then Vercel production/deployment host when present.
- */
 export function seoFilesPlugin(): Plugin {
   let outDir = "dist";
 
@@ -15,6 +10,24 @@ export function seoFilesPlugin(): Plugin {
     apply: "build",
     configResolved(config) {
       outDir = path.resolve(config.root, config.build.outDir);
+    },
+    transformIndexHtml(html) {
+      const siteUrl = resolveSiteUrl();
+      if (!siteUrl) return html;
+
+      return html
+        .replace(
+          /(<meta\s+property="og:url"\s+content=")[^"]*(")/,
+          `$1${siteUrl}/$2`,
+        )
+        .replace(
+          /(<meta\s+property="og:image"\s+content=")[^"]*(")/,
+          `$1${siteUrl}/og.jpg$2`,
+        )
+        .replace(
+          /(<meta\s+name="twitter:image"\s+content=")[^"]*(")/,
+          `$1${siteUrl}/og.jpg$2`,
+        );
     },
     closeBundle() {
       const siteUrl = resolveSiteUrl();
