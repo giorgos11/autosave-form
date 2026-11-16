@@ -3,6 +3,8 @@
 A user profile form (personal details + an orderable skills list) that debounces changes to a
 server, recovers from failures, and keeps drafts across reloads.
 
+**Live demo:** https://autosave-form-two.vercel.app/
+
 ## How to run
 
 ```bash
@@ -12,13 +14,15 @@ npm test          # unit tests (Vitest)
 npm run build     # type-check + production build
 ```
 
-| Script               | Description                          |
-| -------------------- | ------------------------------------ |
-| `npm run dev`        | Start the Vite dev server            |
-| `npm test`           | Run unit tests once                  |
-| `npm run test:watch` | Re-run tests on change               |
-| `npm run build`      | Type-check and build to `dist/`      |
-| `npm run lint`       | Lint the codebase                    |
+| Script                 | Description                     |
+| ---------------------- | ------------------------------- |
+| `npm run dev`          | Start the Vite dev server       |
+| `npm test`             | Run unit tests once             |
+| `npm run test:watch`   | Re-run tests on change          |
+| `npm run build`        | Type-check and build to `dist/` |
+| `npm run lint`         | Lint the codebase               |
+| `npm run format`       | Format with Prettier            |
+| `npm run format:check` | Check formatting (used in CI)   |
 
 There is no real backend. [MSW](https://mswjs.io) intercepts `GET` / `PUT /api/user-profile` in the
 browser (also enabled in production builds so the deployed demo works). Successful PUTs update an
@@ -26,13 +30,13 @@ in-memory server profile that GET returns — groundwork for conflict reload.
 
 ### Demo controls
 
-| Trigger | Effect |
-| ------- | ------ |
-| Email ending in `@fail.test` | Deterministic transient failure (`500` / `503` / network) |
-| Email ending in `@conflict.test` | One-shot concurrent race (`409` + revision bump); **Keep mine** / **Use theirs** then work. Change email away and back to re-arm. |
-| `/?mockErrorRate=0` | Never fail randomly |
-| `/?mockErrorRate=1` | Always fail randomly |
-| `/?mockLatencyMinMs=1500&mockLatencyMaxMs=3000` | Slow responses |
+| Trigger                                         | Effect                                                                                                                            |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Email ending in `@fail.test`                    | Deterministic transient failure (`500` / `503` / network)                                                                         |
+| Email ending in `@conflict.test`                | One-shot concurrent race (`409` + revision bump); **Keep mine** / **Use theirs** then work. Change email away and back to re-arm. |
+| `/?mockErrorRate=0`                             | Never fail randomly                                                                                                               |
+| `/?mockErrorRate=1`                             | Always fail randomly                                                                                                              |
+| `/?mockLatencyMinMs=1500&mockLatencyMaxMs=3000` | Slow responses                                                                                                                    |
 
 Defaults (`VITE_*` in `.env`): ~20% random errors, 300–800 ms latency. Query params override
 env without a rebuild.
@@ -91,15 +95,15 @@ sensor, with screen-reader drag announcements.
 
 ## Trade-offs
 
-| Choice | Trade-off |
-| ------ | --------- |
-| GET exists; form still hydrates from draft | `get` is wired for later conflict/load; UI still prefers `localStorage` on boot |
-| Document `revision` + conflict resolve | `409` pauses autosave; **Keep mine** rebases, **Use theirs** loads GET |
-| `localStorage` vs `sessionStorage` | Survives tab close; shared across tabs; stores PII locally |
-| Save invalid drafts | Better UX; requires a draft-friendly backend |
-| MSW in production builds | Demo works offline; must be disabled for a real API |
-| No flush-on-blur/unload yet | Last keystrokes can still sit in the debounce window if the tab dies immediately |
-| Meta + `robots.txt` / one-URL sitemap | Share cards and crawl basics for a demo SPA; a sitemap does not create indexable content — real multi-route apps need SSR/prerender |
+| Choice                                     | Trade-off                                                                                                                           |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| GET exists; form still hydrates from draft | `get` is wired for later conflict/load; UI still prefers `localStorage` on boot                                                     |
+| Document `revision` + conflict resolve     | `409` pauses autosave; **Keep mine** rebases, **Use theirs** loads GET                                                              |
+| `localStorage` vs `sessionStorage`         | Survives tab close; shared across tabs; stores PII locally                                                                          |
+| Save invalid drafts                        | Better UX; requires a draft-friendly backend                                                                                        |
+| MSW in production builds                   | Demo works offline; must be disabled for a real API                                                                                 |
+| No flush-on-blur/unload yet                | Last keystrokes can still sit in the debounce window if the tab dies immediately                                                    |
+| Meta + `robots.txt` / one-URL sitemap      | Share cards and crawl basics for a demo SPA; a sitemap does not create indexable content — real multi-route apps need SSR/prerender |
 
 ## With more time
 
@@ -109,7 +113,7 @@ sensor, with screen-reader drag announcements.
 3. **JSON Patch** — when the document is large: diff against last confirmed snapshot, `PATCH` with
    revision; replace `/skills` as a unit (avoid fragile `/skills/n` indexes).
 4. ~~**Versioned save protocol**~~ — done (`revision` + conflict Keep mine / Use theirs).
-5. **Load profile from the API on boot** — then localStorage only for *unsynced* drafts.
+5. **Load profile from the API on boot** — then localStorage only for _unsynced_ drafts.
 6. **Broader tests** — HTTP error mapping, skills domain rules; optional MSW integration tests.
 7. **Production hardening** — auth headers, timeouts, clearer conflict copy, draft encryption or
    TTL if PII retention matters.
