@@ -120,10 +120,9 @@ sensor, with screen-reader drag announcements.
 2. **Skip no-op saves** — if the snapshot equals the last confirmed one, do not hit the network.
 3. **JSON Patch** — when the document is large: diff against last confirmed snapshot, `PATCH` with
    revision; replace `/skills` as a unit (avoid fragile `/skills/n` indexes).
-4. ~~**Versioned save protocol**~~ — done (`revision` + conflict Keep mine / Use theirs).
-5. **Load profile from the API on boot** — then localStorage only for _unsynced_ drafts.
-6. **Remaining tests** — HTTP error mapping and skills domain rules; optional MSW integration
+4. **Load profile from the API on boot** — then localStorage only for _unsynced_ drafts.
+5. **Remaining tests** — HTTP error mapping and skills domain rules; optional MSW integration
    tests. (Profile validation, dial-code suggest, autosave, draft store, and age helpers are
    already covered.)
-7. **Production hardening** — auth headers, timeouts, clearer conflict copy, draft encryption or
+6. **Production hardening** — auth headers, timeouts, clearer conflict copy, draft encryption or
    TTL if PII retention matters.
