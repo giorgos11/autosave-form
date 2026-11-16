@@ -40,7 +40,20 @@ export const userProfileHandlers = [
 
     await delay(randomInt(latencyMinMs, latencyMaxMs));
 
-    if (body.profile.email.endsWith(CONFLICT_EMAIL_DOMAIN)) {
+    if (
+      body.profile.email.endsWith(CONFLICT_EMAIL_DOMAIN) &&
+      body.revision === current.revision
+    ) {
+      setStoredUserProfileDocument({
+        revision: current.revision + 1,
+        profile: {
+          ...current.profile,
+          bio:
+            current.profile.bio.trim() === ""
+              ? "(updated elsewhere)"
+              : current.profile.bio,
+        },
+      });
       return HttpResponse.json(
         { message: "Profile was updated elsewhere" },
         { status: 409 },

@@ -3,10 +3,15 @@ import type {
   AutosaveStatus,
   ProfileAutosave,
 } from "../../../application/create-profile-autosave";
+import type { UserProfile } from "../../../domain/entities/user-profile";
 import styles from "./SaveStatus.module.css";
 
 type SaveStatusProps = {
-  autosave: Pick<ProfileAutosave, "subscribe" | "getStatus" | "retry">;
+  autosave: Pick<
+    ProfileAutosave,
+    "subscribe" | "getStatus" | "retry" | "keepMine" | "useTheirs"
+  >;
+  onUseTheirs: (profile: UserProfile) => void;
 };
 
 type Tone = "neutral" | "busy" | "success" | "error";
@@ -29,9 +34,14 @@ const describe = (
   }
 };
 
-export const SaveStatus = ({ autosave }: SaveStatusProps) => {
+export const SaveStatus = ({ autosave, onUseTheirs }: SaveStatusProps) => {
   const status = useSyncExternalStore(autosave.subscribe, autosave.getStatus);
   const { tone, message } = describe(status);
+
+  const handleUseTheirs = async () => {
+    const profile = await autosave.useTheirs();
+    onUseTheirs(profile);
+  };
 
   return (
     <div className={styles.cluster}>
@@ -52,6 +62,24 @@ export const SaveStatus = ({ autosave }: SaveStatusProps) => {
         >
           Retry
         </button>
+      )}
+      {status.kind === "conflict" && (
+        <div className={styles.conflictActions}>
+          <button
+            type="button"
+            className={styles.retryButton}
+            onClick={() => void autosave.keepMine()}
+          >
+            Keep mine
+          </button>
+          <button
+            type="button"
+            className={styles.retryButton}
+            onClick={() => void handleUseTheirs()}
+          >
+            Use theirs
+          </button>
+        </div>
       )}
     </div>
   );

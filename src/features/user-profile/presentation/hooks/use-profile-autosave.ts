@@ -13,11 +13,12 @@ export type UseProfileAutosaveResult = {
 };
 
 export const useProfileAutosave = (): UseProfileAutosaveResult => {
-  const { save, draftStore } = useUserProfileDependencies();
+  const { get, save, draftStore } = useUserProfileDependencies();
   const [state] = useState(() => {
     const draft = draftStore.load();
     const initialProfile = draft?.profile ?? INITIAL_USER_PROFILE;
     const autosave = createProfileAutosave({
+      get,
       save,
       draftStore,
       initialSnapshot: initialProfile,

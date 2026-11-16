@@ -29,7 +29,7 @@ in-memory server profile that GET returns — groundwork for conflict reload.
 | Trigger | Effect |
 | ------- | ------ |
 | Email ending in `@fail.test` | Deterministic transient failure (`500` / `503` / network) |
-| Email ending in `@conflict.test` | Deterministic `409` (non-retryable) |
+| Email ending in `@conflict.test` | Concurrent-write demo: `409` + server revision bump; rebase with **Keep mine** / **Use theirs** |
 | `/?mockErrorRate=0` | Never fail randomly |
 | `/?mockErrorRate=1` | Always fail randomly |
 | `/?mockLatencyMinMs=1500&mockLatencyMaxMs=3000` | Slow responses |
@@ -73,8 +73,9 @@ The backend must treat these as drafts.
 **Errors classified at the HTTP edge.** The repository maps transport failures to
 `SaveUserProfileError` with a `retryable` flag. Transient failures (`5xx`, `408`, `429`, network)
 get exponential backoff (1s → 2s → 4s); then a manual **Retry**. Non-retryable rejects (e.g.
-generic client errors) fail fast with Retry. **`409` is conflict**: autosave pauses, local
-edits are kept, and Retry is disabled until the user resolves (Step 4).
+generic client errors) fail fast with Retry. **`409` is conflict**: autosave pauses and local
+edits are kept. Resolve with **Keep mine** (GET revision, re-PUT local) or **Use theirs**
+(GET document into the form).
 
 **Drafts in `localStorage`.** Unsynced snapshots survive reload; after a successful save the
 draft is kept as synced so hydrate still works without a GET. Trade-off: drafts can contain PII
@@ -89,7 +90,7 @@ sensor, with screen-reader drag announcements.
 | Choice | Trade-off |
 | ------ | --------- |
 | GET exists; form still hydrates from draft | `get` is wired for later conflict/load; UI still prefers `localStorage` on boot |
-| Document `revision`; conflict pauses autosave | `409` → `conflict` status (no retry); Keep mine / Use theirs in Step 4 |
+| Document `revision` + conflict resolve | `409` pauses autosave; **Keep mine** rebases, **Use theirs** loads GET |
 | `localStorage` vs `sessionStorage` | Survives tab close; shared across tabs; stores PII locally |
 | Save invalid drafts | Better UX; requires a draft-friendly backend |
 | MSW in production builds | Demo works offline; must be disabled for a real API |
@@ -100,10 +101,8 @@ sensor, with screen-reader drag announcements.
 1. **Flush lifecycle** — immediate save on blur, submit, `visibilitychange`, and unload
    (`keepalive` fetch).
 2. **Skip no-op PUTs** — if the snapshot equals the last confirmed one, do not hit the network.
-3. **Versioned save protocol** — client `revision` + `savedAt` response; treat `409` as a first-class
-   conflict with clearer UX (reload server state when a GET exists).
-4. **Load profile from the API** — then localStorage only for *unsynced* drafts, not as the source
-   of truth after a successful save.
+3. ~~**Versioned save protocol**~~ — done (`revision` + conflict Keep mine / Use theirs).
+4. **Load profile from the API on boot** — then localStorage only for *unsynced* drafts.
 5. **Broader tests** — HTTP error mapping, skills domain rules; optional MSW integration tests.
 6. **Production hardening** — auth headers, timeouts, clearer conflict copy, draft encryption or
    TTL if PII retention matters.

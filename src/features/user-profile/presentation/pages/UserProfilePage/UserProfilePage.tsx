@@ -17,6 +17,7 @@ export const UserProfilePage = () => {
     handleSubmit,
     getVisibleError,
     updateSkills,
+    replaceProfile,
   } = useUserProfileViewModel({ autosave, initialProfile });
 
   return (
@@ -24,7 +25,7 @@ export const UserProfilePage = () => {
       <header className={styles.header}>
         <div className={styles.titleRow}>
           <h1>Profile &amp; account</h1>
-          <SaveStatus autosave={autosave} />
+          <SaveStatus autosave={autosave} onUseTheirs={replaceProfile} />
         </div>
         <p>Update your details below. Changes save automatically.</p>
       </header>

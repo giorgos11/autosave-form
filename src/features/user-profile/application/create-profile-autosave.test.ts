@@ -3,6 +3,7 @@ import { INITIAL_USER_PROFILE } from "../domain/constants/initial-user-profile";
 import type { UserProfile } from "../domain/entities/user-profile";
 import { SaveUserProfileError } from "../domain/errors/save-user-profile.error";
 import { createProfileAutosave } from "./create-profile-autosave";
+import type { GetUserProfile } from "./get-user-profile";
 import type { SaveUserProfile } from "./save-user-profile";
 
 const profile = (overrides: Partial<UserProfile> = {}): UserProfile => ({
@@ -43,6 +44,21 @@ const conflictError = () =>
     conflict: true,
   });
 
+const defaultGet: GetUserProfile = async () => ({
+  revision: 0,
+  profile: INITIAL_USER_PROFILE,
+});
+
+const createAutosave = (
+  params: Omit<Parameters<typeof createProfileAutosave>[0], "get"> & {
+    get?: GetUserProfile;
+  },
+) =>
+  createProfileAutosave({
+    get: defaultGet,
+    ...params,
+  });
+
 describe("createProfileAutosave", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -54,7 +70,7 @@ describe("createProfileAutosave", () => {
 
   it("starts idle and does not save before the debounce elapses", async () => {
     const save = vi.fn<SaveUserProfile>().mockImplementation(saveOk);
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
 
     expect(autosave.getStatus()).toEqual({ kind: "idle" });
     expect(autosave.getRevision()).toBe(0);
@@ -68,7 +84,7 @@ describe("createProfileAutosave", () => {
 
   it("saves with the current revision and advances it on success", async () => {
     const save = vi.fn<SaveUserProfile>().mockImplementation(saveOk);
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
     const snapshot = profile({ fullName: "Ada Lovelace" });
 
     autosave.schedule(snapshot);
@@ -83,7 +99,7 @@ describe("createProfileAutosave", () => {
 
   it("resets the debounce and only persists the latest scheduled snapshot", async () => {
     const save = vi.fn<SaveUserProfile>().mockImplementation(saveOk);
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
     const first = profile({ fullName: "A" });
     const second = profile({ fullName: "Ada" });
 
@@ -105,7 +121,7 @@ describe("createProfileAutosave", () => {
   it("exposes saving while a request is in flight", async () => {
     const deferred = createDeferred();
     const save = vi.fn<SaveUserProfile>().mockReturnValue(deferred.promise);
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
 
     autosave.schedule(profile({ fullName: "Ada" }));
     await vi.advanceTimersByTimeAsync(500);
@@ -126,7 +142,7 @@ describe("createProfileAutosave", () => {
       .mockImplementationOnce(() => firstSave.promise)
       .mockImplementationOnce(saveOk);
 
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
     const duringFlight = profile({ fullName: "Ada Lovelace" });
 
     autosave.schedule(profile({ fullName: "Ada" }));
@@ -159,7 +175,7 @@ describe("createProfileAutosave", () => {
       .mockRejectedValueOnce(retryableError())
       .mockImplementationOnce(saveOk);
 
-    const autosave = createProfileAutosave({
+    const autosave = createAutosave({
       save,
       debounceMs: 500,
       maxRetries: 3,
@@ -194,7 +210,7 @@ describe("createProfileAutosave", () => {
 
   it("stops retrying after maxRetries and marks error", async () => {
     const save = vi.fn<SaveUserProfile>().mockRejectedValue(retryableError());
-    const autosave = createProfileAutosave({
+    const autosave = createAutosave({
       save,
       debounceMs: 500,
       maxRetries: 3,
@@ -219,7 +235,7 @@ describe("createProfileAutosave", () => {
       .mockRejectedValueOnce(nonRetryableError())
       .mockImplementationOnce(saveOk);
 
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
 
     autosave.schedule(profile({ fullName: "Ada" }));
     await vi.advanceTimersByTimeAsync(500);
@@ -237,7 +253,7 @@ describe("createProfileAutosave", () => {
     const save = vi
       .fn<SaveUserProfile>()
       .mockRejectedValue(nonRetryableError());
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
 
     autosave.schedule(profile({ fullName: "Ada" }));
     await vi.advanceTimersByTimeAsync(500);
@@ -253,7 +269,7 @@ describe("createProfileAutosave", () => {
       .mockRejectedValueOnce(retryableError())
       .mockImplementationOnce(saveOk);
 
-    const autosave = createProfileAutosave({
+    const autosave = createAutosave({
       save,
       debounceMs: 500,
       retryBaseDelayMs: 1000,
@@ -279,7 +295,7 @@ describe("createProfileAutosave", () => {
       .fn<SaveUserProfile>()
       .mockRejectedValueOnce(nonRetryableError())
       .mockImplementationOnce(saveOk);
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
     const recovered = profile({ fullName: "Ada" });
 
     autosave.schedule(profile({ fullName: "A" }));
@@ -301,7 +317,7 @@ describe("createProfileAutosave", () => {
 
   it("notifies subscribers when status changes and stops after unsubscribe", async () => {
     const save = vi.fn<SaveUserProfile>().mockImplementation(saveOk);
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
     const listener = vi.fn();
 
     const unsubscribe = autosave.subscribe(listener);
@@ -329,7 +345,7 @@ describe("createProfileAutosave", () => {
       .mockImplementationOnce(() => firstSave.promise)
       .mockImplementationOnce(() => secondSave.promise);
 
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
     const listener = vi.fn();
     autosave.subscribe(listener);
 
@@ -354,7 +370,7 @@ describe("createProfileAutosave", () => {
 
   it("dispose cancels a pending debounced save and retry", async () => {
     const save = vi.fn<SaveUserProfile>().mockRejectedValue(retryableError());
-    const autosave = createProfileAutosave({
+    const autosave = createAutosave({
       save,
       debounceMs: 500,
       retryBaseDelayMs: 1000,
@@ -373,7 +389,7 @@ describe("createProfileAutosave", () => {
 
   it("marks conflict on 409-class errors and does not retry", async () => {
     const save = vi.fn<SaveUserProfile>().mockRejectedValue(conflictError());
-    const autosave = createProfileAutosave({
+    const autosave = createAutosave({
       save,
       debounceMs: 500,
       retryBaseDelayMs: 1000,
@@ -394,7 +410,7 @@ describe("createProfileAutosave", () => {
       save: vi.fn(),
       clear: vi.fn(),
     };
-    const autosave = createProfileAutosave({
+    const autosave = createAutosave({
       save,
       draftStore,
       debounceMs: 500,
@@ -420,7 +436,7 @@ describe("createProfileAutosave", () => {
 
   it("retry() is a no-op while in conflict", async () => {
     const save = vi.fn<SaveUserProfile>().mockRejectedValue(conflictError());
-    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+    const autosave = createAutosave({ save, debounceMs: 500 });
 
     autosave.schedule(profile({ fullName: "Ada" }));
     await vi.advanceTimersByTimeAsync(500);
@@ -434,6 +450,57 @@ describe("createProfileAutosave", () => {
     expect(autosave.getStatus()).toEqual({ kind: "conflict" });
   });
 
+  it("keepMine rebases onto the server revision and saves local edits", async () => {
+    const local = profile({ fullName: "Ada Lovelace" });
+    const save = vi
+      .fn<SaveUserProfile>()
+      .mockRejectedValueOnce(conflictError())
+      .mockImplementationOnce(saveOk);
+    const get = vi.fn<GetUserProfile>().mockResolvedValue({
+      revision: 1,
+      profile: profile({ fullName: "Server Ada", bio: "(updated elsewhere)" }),
+    });
+    const autosave = createAutosave({ save, get, debounceMs: 500 });
+
+    autosave.schedule(local);
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+    expect(autosave.getStatus()).toEqual({ kind: "conflict" });
+
+    await autosave.keepMine();
+    await vi.runAllTimersAsync();
+
+    expect(get).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenLastCalledWith({ profile: local, revision: 1 });
+    expect(autosave.getRevision()).toBe(2);
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
+  });
+
+  it("useTheirs loads the server profile and resumes as saved", async () => {
+    const serverProfile = profile({
+      fullName: "Server Ada",
+      bio: "(updated elsewhere)",
+    });
+    const save = vi.fn<SaveUserProfile>().mockRejectedValue(conflictError());
+    const get = vi.fn<GetUserProfile>().mockResolvedValue({
+      revision: 1,
+      profile: serverProfile,
+    });
+    const autosave = createAutosave({ save, get, debounceMs: 500 });
+
+    autosave.schedule(profile({ fullName: "Ada" }));
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+    expect(autosave.getStatus()).toEqual({ kind: "conflict" });
+
+    const loaded = await autosave.useTheirs();
+
+    expect(loaded).toEqual(serverProfile);
+    expect(autosave.getRevision()).toBe(1);
+    expect(autosave.getStatus()).toEqual({ kind: "saved" });
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
   it("persists an unsynced draft on schedule and marks it synced after save", async () => {
     const save = vi.fn<SaveUserProfile>().mockImplementation(saveOk);
     const draftStore = {
@@ -442,7 +509,7 @@ describe("createProfileAutosave", () => {
       clear: vi.fn(),
     };
     const snapshot = profile({ fullName: "Ada" });
-    const autosave = createProfileAutosave({
+    const autosave = createAutosave({
       save,
       draftStore,
       debounceMs: 500,
