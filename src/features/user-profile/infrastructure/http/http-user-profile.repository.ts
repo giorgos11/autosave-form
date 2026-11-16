@@ -16,9 +16,13 @@ const isRetryableStatus = (status: number) =>
 
 const toSaveUserProfileError = (error: unknown): SaveUserProfileError => {
   if (isHttpError(error)) {
+    const conflict = error.status === 409;
     return new SaveUserProfileError({
-      message: error.message,
-      retryable: isRetryableStatus(error.status),
+      message: conflict
+        ? "Profile was updated elsewhere"
+        : error.message,
+      retryable: !conflict && isRetryableStatus(error.status),
+      conflict,
       cause: error,
     });
   }

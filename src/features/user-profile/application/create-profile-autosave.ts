@@ -1,5 +1,8 @@
 import type { UserProfile } from "../domain/entities/user-profile";
-import { isRetryableSaveError } from "../domain/errors/save-user-profile.error";
+import {
+  isConflictSaveError,
+  isRetryableSaveError,
+} from "../domain/errors/save-user-profile.error";
 import type { UserProfileDraftStore } from "../domain/ports/user-profile-draft.store";
 import type { SaveUserProfile } from "./save-user-profile";
 
@@ -12,7 +15,8 @@ export type AutosaveStatus =
       readonly attempt: number;
       readonly maxAttempts: number;
     }
-  | { readonly kind: "error" };
+  | { readonly kind: "error" }
+  | { readonly kind: "conflict" };
 
 export type ProfileAutosave = {
   schedule: (snapshot: UserProfile) => void;
@@ -93,6 +97,7 @@ export const createProfileAutosave = ({
   };
 
   const runSave = async () => {
+    if (status.kind === "conflict") return;
     if (inFlight) return;
     if (savedGeneration === generation) return;
     if (latestSnapshot === null) return;
@@ -123,6 +128,13 @@ export const createProfileAutosave = ({
       setStatus({ kind: "saved" });
     } catch (error) {
       inFlight = false;
+      clearRetry();
+
+      if (isConflictSaveError(error)) {
+        retryAttempts = 0;
+        setStatus({ kind: "conflict" });
+        return;
+      }
 
       if (isRetryableSaveError(error) && retryAttempts < maxRetries) {
         scheduleRetry();
@@ -136,8 +148,14 @@ export const createProfileAutosave = ({
     schedule: (snapshot) => {
       latestSnapshot = snapshot;
       generation += 1;
-      retryAttempts = 0;
       persistDraft(snapshot, false);
+
+      // Conflict: keep local edits, pause network autosave until resolved (Step 4).
+      if (status.kind === "conflict") {
+        return;
+      }
+
+      retryAttempts = 0;
       clearRetry();
       clearDebounce();
       debounceTimer = setTimeout(() => {
@@ -147,6 +165,7 @@ export const createProfileAutosave = ({
     },
 
     retry: () => {
+      if (status.kind === "conflict") return;
       clearDebounce();
       clearRetry();
       retryAttempts = 0;

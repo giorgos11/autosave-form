@@ -73,7 +73,8 @@ The backend must treat these as drafts.
 **Errors classified at the HTTP edge.** The repository maps transport failures to
 `SaveUserProfileError` with a `retryable` flag. Transient failures (`5xx`, `408`, `429`, network)
 get exponential backoff (1s → 2s → 4s); then a manual **Retry**. Non-retryable rejects (e.g.
-`409`) fail fast with Retry — no blind loop of the same body.
+generic client errors) fail fast with Retry. **`409` is conflict**: autosave pauses, local
+edits are kept, and Retry is disabled until the user resolves (Step 4).
 
 **Drafts in `localStorage`.** Unsynced snapshots survive reload; after a successful save the
 draft is kept as synced so hydrate still works without a GET. Trade-off: drafts can contain PII
@@ -88,7 +89,7 @@ sensor, with screen-reader drag announcements.
 | Choice | Trade-off |
 | ------ | --------- |
 | GET exists; form still hydrates from draft | `get` is wired for later conflict/load; UI still prefers `localStorage` on boot |
-| Document `revision` on wire; UI still treats 409 as generic error | Autosave tracks revision; Step 3 adds first-class conflict resolve |
+| Document `revision`; conflict pauses autosave | `409` → `conflict` status (no retry); Keep mine / Use theirs in Step 4 |
 | `localStorage` vs `sessionStorage` | Survives tab close; shared across tabs; stores PII locally |
 | Save invalid drafts | Better UX; requires a draft-friendly backend |
 | MSW in production builds | Demo works offline; must be disabled for a real API |

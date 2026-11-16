@@ -36,6 +36,13 @@ const nonRetryableError = () =>
     retryable: false,
   });
 
+const conflictError = () =>
+  new SaveUserProfileError({
+    message: "Profile was updated elsewhere",
+    retryable: false,
+    conflict: true,
+  });
+
 describe("createProfileAutosave", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -362,6 +369,69 @@ describe("createProfileAutosave", () => {
     await vi.runAllTimersAsync();
 
     expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks conflict on 409-class errors and does not retry", async () => {
+    const save = vi.fn<SaveUserProfile>().mockRejectedValue(conflictError());
+    const autosave = createProfileAutosave({
+      save,
+      debounceMs: 500,
+      retryBaseDelayMs: 1000,
+    });
+
+    autosave.schedule(profile({ fullName: "Ada" }));
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(autosave.getStatus()).toEqual({ kind: "conflict" });
+  });
+
+  it("keeps local edits during conflict but does not autosave again", async () => {
+    const save = vi.fn<SaveUserProfile>().mockRejectedValue(conflictError());
+    const draftStore = {
+      load: vi.fn(),
+      save: vi.fn(),
+      clear: vi.fn(),
+    };
+    const autosave = createProfileAutosave({
+      save,
+      draftStore,
+      debounceMs: 500,
+    });
+    const localEdit = profile({ fullName: "Ada Lovelace" });
+
+    autosave.schedule(profile({ fullName: "Ada" }));
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+    expect(autosave.getStatus()).toEqual({ kind: "conflict" });
+
+    autosave.schedule(localEdit);
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(autosave.getStatus()).toEqual({ kind: "conflict" });
+    expect(draftStore.save).toHaveBeenLastCalledWith({
+      profile: localEdit,
+      synced: false,
+    });
+  });
+
+  it("retry() is a no-op while in conflict", async () => {
+    const save = vi.fn<SaveUserProfile>().mockRejectedValue(conflictError());
+    const autosave = createProfileAutosave({ save, debounceMs: 500 });
+
+    autosave.schedule(profile({ fullName: "Ada" }));
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.runAllTimersAsync();
+    expect(autosave.getStatus()).toEqual({ kind: "conflict" });
+
+    autosave.retry();
+    await vi.runAllTimersAsync();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(autosave.getStatus()).toEqual({ kind: "conflict" });
   });
 
   it("persists an unsynced draft on schedule and marks it synced after save", async () => {

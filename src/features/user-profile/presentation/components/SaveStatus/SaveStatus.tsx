@@ -24,6 +24,8 @@ const describe = (
     case "retrying":
     case "error":
       return { tone: "error", message: "Error saving" };
+    case "conflict":
+      return { tone: "error", message: "Conflict" };
   }
 };
 
