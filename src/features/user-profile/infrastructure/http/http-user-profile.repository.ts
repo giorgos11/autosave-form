@@ -3,7 +3,8 @@ import { isHttpError } from "@/shared/api/http-error";
 import { SaveUserProfileError } from "../../domain/errors/save-user-profile.error";
 import type { UserProfileRepository } from "../../domain/ports/user-profile.repository";
 import { USER_PROFILE_ENDPOINTS } from "./user-profile.endpoints";
-import { toUserProfileDto } from "./user-profile.mapper";
+import type { UserProfileDto } from "./user-profile.dto";
+import { toUserProfile, toUserProfileDto } from "./user-profile.mapper";
 
 const RETRYABLE_CLIENT_STATUSES = new Set([408, 429]);
 
@@ -41,6 +42,13 @@ export type CreateHttpUserProfileRepositoryParams = {
 export const createHttpUserProfileRepository = ({
   httpClient,
 }: CreateHttpUserProfileRepositoryParams): UserProfileRepository => ({
+  get: async () => {
+    const dto = await httpClient.get<UserProfileDto>(
+      USER_PROFILE_ENDPOINTS.profile,
+    );
+    return toUserProfile(dto);
+  },
+
   save: async (profile) => {
     try {
       await httpClient.put<void>(

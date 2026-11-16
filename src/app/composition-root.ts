@@ -1,4 +1,5 @@
 import {
+  createGetUserProfile,
   createHttpUserProfileRepository,
   createLocalStorageUserProfileDraftStore,
   createSaveUserProfile,
@@ -13,6 +14,7 @@ const userProfileRepository = createHttpUserProfileRepository({ httpClient });
 
 export const dependencies = {
   userProfile: {
+    get: createGetUserProfile({ repository: userProfileRepository }),
     save: createSaveUserProfile({ repository: userProfileRepository }),
     draftStore: createLocalStorageUserProfileDraftStore(),
   } satisfies UserProfileDependencies,

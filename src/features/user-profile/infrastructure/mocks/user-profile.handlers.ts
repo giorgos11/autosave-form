@@ -3,6 +3,10 @@ import { delay, http, HttpResponse } from "msw";
 import type { UserProfileDto } from "../http/user-profile.dto";
 import { USER_PROFILE_ENDPOINTS } from "../http/user-profile.endpoints";
 import { getMockConfig } from "./mock-config";
+import {
+  getStoredUserProfile,
+  setStoredUserProfile,
+} from "./user-profile.store";
 
 const PROFILE_URL = `${env.apiBaseUrl}${USER_PROFILE_ENDPOINTS.profile}`;
 
@@ -23,6 +27,12 @@ const randomFailure = () =>
   FAILURE_RESPONSES[randomInt(0, FAILURE_RESPONSES.length - 1)]();
 
 export const userProfileHandlers = [
+  http.get(PROFILE_URL, async () => {
+    const { latencyMinMs, latencyMaxMs } = getMockConfig();
+    await delay(randomInt(latencyMinMs, latencyMaxMs));
+    return HttpResponse.json(getStoredUserProfile());
+  }),
+
   http.put(PROFILE_URL, async ({ request }) => {
     const profile = (await request.json()) as UserProfileDto;
     const { errorRate, latencyMinMs, latencyMaxMs } = getMockConfig();
@@ -43,6 +53,7 @@ export const userProfileHandlers = [
       return randomFailure();
     }
 
+    setStoredUserProfile(profile);
     return new HttpResponse(null, { status: 204 });
   }),
 ];

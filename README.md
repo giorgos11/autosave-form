@@ -20,8 +20,9 @@ npm run build     # type-check + production build
 | `npm run build`      | Type-check and build to `dist/`      |
 | `npm run lint`       | Lint the codebase                    |
 
-There is no real backend. [MSW](https://mswjs.io) intercepts `PUT /api/user-profile` in the
-browser (also enabled in production builds so the deployed demo works).
+There is no real backend. [MSW](https://mswjs.io) intercepts `GET` / `PUT /api/user-profile` in the
+browser (also enabled in production builds so the deployed demo works). Successful PUTs update an
+in-memory server profile that GET returns — groundwork for conflict reload.
 
 ### Demo controls
 
@@ -85,7 +86,7 @@ sensor, with screen-reader drag announcements.
 
 | Choice | Trade-off |
 | ------ | --------- |
-| No GET / server hydrate | Reload relies on `localStorage`, not the API |
+| GET exists; form still hydrates from draft | `get` is wired for later conflict/load; UI still prefers `localStorage` on boot |
 | No wire `revision` yet | Client generation is enough with single-flight; true multi-writer conflicts need server versions |
 | `localStorage` vs `sessionStorage` | Survives tab close; shared across tabs; stores PII locally |
 | Save invalid drafts | Better UX; requires a draft-friendly backend |
