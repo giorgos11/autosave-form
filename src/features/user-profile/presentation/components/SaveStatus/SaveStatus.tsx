@@ -44,8 +44,7 @@ export const SaveStatus = ({ autosave, onUseTheirs }: SaveStatusProps) => {
   const { tone, message, hint } = describe(status);
   const [useTheirsError, setUseTheirsError] = useState<string | null>(null);
   const [useTheirsPending, setUseTheirsPending] = useState(false);
-  const showUseTheirsError =
-    status.kind === "conflict" ? useTheirsError : null;
+  const showUseTheirsError = status.kind === "conflict" ? useTheirsError : null;
 
   const handleUseTheirs = async () => {
     if (useTheirsPending) return;
